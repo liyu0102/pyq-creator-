@@ -40,7 +40,7 @@ fab.title = MODULE_NAME;
 fab.innerText = '🌟';
 fab.style.position = 'fixed';
 
-// 如果有存储位置，用存储的位置；否则默认居中
+// 如果有存储位置,用存储的位置;否则默认居中
 const savedTop = localStorage.getItem('starFabTop');
 const savedRight = localStorage.getItem('starFabRight');
 if (savedTop && savedRight) {
@@ -81,11 +81,11 @@ document.body.appendChild(fab);
     const dx = clientX - startX;
     const dy = clientY - startY;
 
-    // 计算新位置（右上角模式：改变 top 和 right）
+    // 计算新位置(右上角模式:改变 top 和 right)
     let newTop = startTop + dy;
     let newRight = startRight - dx;
 
-    // 限制范围（不能拖出屏幕）
+    // 限制范围(不能拖出屏幕)
     const maxTop = window.innerHeight - fab.offsetHeight;
     const maxRight = window.innerWidth - fab.offsetWidth;
     newTop = Math.max(0, Math.min(maxTop, newTop));
@@ -113,7 +113,7 @@ document.body.appendChild(fab);
     fab.style.cursor = 'grabbing';
   }
 
-  // 绑定事件（PC + 手机）
+  // 绑定事件(PC + 手机)
   fab.addEventListener('mousedown', onStart);
   fab.addEventListener('touchstart', onStart);
   document.addEventListener('mousemove', onMove);
@@ -132,6 +132,7 @@ document.body.appendChild(fab);
           <div class="sp-btn" data-key="api">API配置</div>
           <div class="sp-btn" data-key="prompt">提示词配置</div>
           <div class="sp-btn" data-key="random-prompt">随机提示词</div>
+          <div class="sp-btn" data-key="random-macro">随机数宏</div>
           <div class="sp-btn" data-key="chat">聊天配置</div>
           <div class="sp-btn" data-key="worldbook">世界书配置</div>
           <div class="sp-btn" data-key="gen">生成</div>
@@ -146,7 +147,7 @@ document.body.appendChild(fab);
       document.body.appendChild(panel);
 
 
-// 模拟点击"生成"按钮，让它默认显示生成面板
+// 模拟点击"生成"按钮,让它默认显示生成面板
 setTimeout(() => {
   const genBtn = panel.querySelector('.sp-btn[data-key="gen"]');
   if (genBtn) genBtn.click();
@@ -198,7 +199,7 @@ setTimeout(() => {
     debugArea.textContent = `${title}:\n${typeof data === 'object' ? JSON.stringify(data, null, 2) : data}`;
   }
 
-  // 初始化：加载本地存储
+  // 初始化:加载本地存储
   document.getElementById("api-url-input").value = localStorage.getItem("independentApiUrl") || "";
   document.getElementById("api-key-input").value = localStorage.getItem("independentApiKey") || "";
   const savedModel = localStorage.getItem("independentApiModel");
@@ -215,12 +216,12 @@ setTimeout(() => {
     if (savedModel) {
       let existing = Array.from(modelSelect.options).find(o => o.value === savedModel);
       if (existing) {
-        existing.textContent = savedModel + "（已保存）";
+        existing.textContent = savedModel + "(已保存)";
         modelSelect.value = savedModel;
       } else {
         const opt = document.createElement("option");
         opt.value = savedModel;
-        opt.textContent = savedModel + "（已保存）";
+        opt.textContent = savedModel + "(已保存)";
         modelSelect.insertBefore(opt, modelSelect.firstChild);
         modelSelect.value = savedModel;
       }
@@ -238,7 +239,7 @@ setTimeout(() => {
   } else if (savedModel) {
     const opt = document.createElement("option");
     opt.value = savedModel;
-    opt.textContent = savedModel + "（已保存）";
+    opt.textContent = savedModel + "(已保存)";
     modelSelect.appendChild(opt);
     modelSelect.value = savedModel;
   }
@@ -255,8 +256,8 @@ setTimeout(() => {
     localStorage.setItem("independentApiModel", model);
 
     Array.from(modelSelect.options).forEach(o => {
-      if (o.value === model) o.textContent = model + "（已保存）";
-      else if (o.textContent.endsWith("（已保存）")) o.textContent = o.value;
+      if (o.value === model) o.textContent = model + "(已保存)";
+      else if (o.textContent.endsWith("(已保存)")) o.textContent = o.value;
     });
 
     document.getElementById("api-status").textContent = "已保存";
@@ -264,7 +265,7 @@ setTimeout(() => {
   });
 
   // 测试连接
- // 测试连接（始终向模型发送 ping 并显示返回）
+ // 测试连接(始终向模型发送 ping 并显示返回)
 document.getElementById("api-test-btn").addEventListener("click", async () => {
   const urlRaw = document.getElementById("api-url-input").value || localStorage.getItem("independentApiUrl");
   const key = document.getElementById("api-key-input").value || localStorage.getItem("independentApiKey");
@@ -293,10 +294,10 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
     if (!res.ok) throw new Error(`chat/completions 返回 ${res.status}`);
 
     const data = await res.json(); // ✅ 读取返回 JSON
-    document.getElementById("api-status").textContent = `模型 ${model} 可用（ping 成功）`;
+    document.getElementById("api-status").textContent = `模型 ${model} 可用(ping 成功)`;
     debugLog("ping 成功", data);
 
-    // 可选：显示模型返回内容的第一条
+    // 可选:显示模型返回内容的第一条
     if (data.choices && data.choices[0]?.message?.content) {
       console.log("模型返回:", data.choices[0].message.content);
     }
@@ -319,7 +320,7 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
     const lastFetch = localStorage.getItem("independentApiModelsFetchedAt");
     if (!force && lastFetch) {
       const ts = new Date(parseInt(lastFetch, 10));
-      document.getElementById("api-status").textContent = `模型已在 ${ts.toLocaleString()} 拉取过，请点击刷新`;
+      document.getElementById("api-status").textContent = `模型已在 ${ts.toLocaleString()} 拉取过,请点击刷新`;
       return;
     }
 
@@ -426,21 +427,22 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             editBtn.textContent = '✏️';
             editBtn.style.marginLeft = '8px';
             editBtn.addEventListener('click', () => {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = p.text;
-                input.style.flex = '1';
-                row.replaceChild(input, span);
+                const textarea = document.createElement('textarea');
+                textarea.value = p.text;
+                textarea.style.flex = '1';
+                textarea.style.minHeight = '60px';
+                textarea.style.resize = 'vertical';
+                row.replaceChild(textarea, span);
 
-                input.addEventListener('blur', () => {
-                    const newText = input.value.trim();
+                textarea.addEventListener('blur', () => {
+                    const newText = textarea.value.trim();
                     if (newText) {
                         friendCirclePrompts[idx].text = newText;
                         localStorage.setItem(PROMPTS_KEY, JSON.stringify(friendCirclePrompts));
                     }
                     renderPromptList();
                 });
-                input.focus();
+                textarea.focus();
             });
 
             const tagBtn = document.createElement('button');
@@ -536,7 +538,7 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
     debugLog('进入 提示词配置面板');
 }
 
-      // 🎲 新增：随机提示词配置面板
+      // 🎲 新增:随机提示词配置面板
       function showRandomPromptConfig() {
     content.innerHTML = `
         <div style="padding: 12px; background: #fff3cd; border-radius: 8px; max-width: 600px; margin: 0 auto;">
@@ -598,21 +600,22 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             editBtn.textContent = '✏️';
             editBtn.style.marginLeft = '8px';
             editBtn.addEventListener('click', () => {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = p.text;
-                input.style.flex = '1';
-                row.replaceChild(input, span);
+                const textarea = document.createElement('textarea');
+                textarea.value = p.text;
+                textarea.style.flex = '1';
+                textarea.style.minHeight = '60px';
+                textarea.style.resize = 'vertical';
+                row.replaceChild(textarea, span);
 
-                input.addEventListener('blur', () => {
-                    const newText = input.value.trim();
+                textarea.addEventListener('blur', () => {
+                    const newText = textarea.value.trim();
                     if (newText) {
                         randomPrompts[idx].text = newText;
                         localStorage.setItem(RANDOM_PROMPTS_KEY, JSON.stringify(randomPrompts));
                     }
                     renderRandomPromptList();
                 });
-                input.focus();
+                textarea.focus();
             });
 
             const tagBtn = document.createElement('button');
@@ -704,6 +707,197 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
     debugLog('进入 随机提示词配置面板');
 }
 
+      // 🎯 新增:随机数宏配置面板
+      function showRandomMacroConfig() {
+    content.innerHTML = `
+        <div style="padding: 12px; background: #e8f5e9; border-radius: 8px; max-width: 100%; margin: 0 auto; box-sizing: border-box;">
+            <h3 style="color: #000; margin-bottom: 12px;">🎯 随机数宏配置</h3>
+            <p style="color: #2e7d32; font-size: 12px; margin-bottom: 12px;">
+                每次生成前会自动替换提示词中的随机数宏(如 {{number1}})为随机数值
+            </p>
+            
+            <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                <input type="number" id="sp-macro-min" placeholder="最小值" 
+                    style="flex: 1; min-width: 80px; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                <input type="number" id="sp-macro-max" placeholder="最大值" 
+                    style="flex: 1; min-width: 80px; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                <button id="sp-add-macro-btn" style="padding: 8px 16px; background: #4caf50; color: white; border: none; border-radius: 4px; white-space: nowrap;">
+                    添加随机数宏
+                </button>
+            </div>
+            
+            <div id="sp-macro-list" style="max-height: 250px; overflow-y: auto; border: 1px solid #ccc; padding: 8px; background: white; border-radius: 4px;">
+                <div style="color: #666; text-align: center; padding: 20px;">暂无随机数宏,点击上方按钮添加</div>
+            </div>
+            
+            <button id="sp-save-macros-btn" style="margin-top: 12px; padding: 10px; width: 100%; background: #2e7d32; color: white; border: none; border-radius: 4px;">
+                保存配置
+            </button>
+        </div>
+    `;
+
+    const MACROS_KEY = 'friendCircleRandomMacros';
+    let randomMacros = [];
+
+    // 加载随机数宏
+    function loadRandomMacros() {
+        const raw = localStorage.getItem(MACROS_KEY);
+        randomMacros = raw ? JSON.parse(raw) : [];
+        return randomMacros;
+    }
+
+    // 渲染随机数宏列表
+    function renderMacroList() {
+        const container = document.getElementById('sp-macro-list');
+        container.innerHTML = '';
+
+        if (randomMacros.length === 0) {
+            container.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">暂无随机数宏,点击上方按钮添加</div>';
+            return;
+        }
+
+        randomMacros.forEach((macro, idx) => {
+            const div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.alignItems = 'center';
+            div.style.gap = '4px';
+            div.style.marginBottom = '4px';
+            div.style.borderBottom = '1px solid #eee';
+            div.style.flexWrap = 'nowrap';
+            div.style.lineHeight = '1.2';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = macro.enabled !== false;
+            checkbox.style.marginRight = '2px';
+            checkbox.style.transform = 'scale(0.9)';
+            checkbox.style.flexShrink = '0';
+            checkbox.addEventListener('change', () => {
+                randomMacros[idx].enabled = checkbox.checked;
+                localStorage.setItem(MACROS_KEY, JSON.stringify(randomMacros));
+            });
+
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = `{{${macro.name}}}`;
+            nameSpan.style.fontWeight = 'bold';
+            nameSpan.style.color = '#2e7d32';
+            nameSpan.style.fontSize = '12px';
+            nameSpan.style.flexShrink = '0';
+            nameSpan.style.whiteSpace = 'nowrap';
+
+            const rangeSpan = document.createElement('span');
+            rangeSpan.textContent = `[${macro.min} ~ ${macro.max}]`;
+            rangeSpan.style.color = '#666';
+            rangeSpan.style.fontSize = '11px';
+            rangeSpan.style.flexShrink = '0';
+            rangeSpan.style.whiteSpace = 'nowrap';
+            rangeSpan.style.marginRight = 'auto';
+
+            const editBtn = document.createElement('button');
+            editBtn.textContent = '✏️';
+            editBtn.style.padding = '2px 6px';
+            editBtn.style.fontSize = '12px';
+            editBtn.style.lineHeight = '1';
+            editBtn.style.flexShrink = '0';
+            editBtn.addEventListener('click', () => {
+                const newMin = prompt('输入最小值:', macro.min);
+                if (newMin === null) return;
+                const newMax = prompt('输入最大值:', macro.max);
+                if (newMax === null) return;
+                
+                const min = parseInt(newMin, 10);
+                const max = parseInt(newMax, 10);
+                
+                if (isNaN(min) || isNaN(max) || min > max) {
+                    alert('输入无效,请确保最小值≤最大值');
+                    return;
+                }
+                
+                randomMacros[idx].min = min;
+                randomMacros[idx].max = max;
+                localStorage.setItem(MACROS_KEY, JSON.stringify(randomMacros));
+                renderMacroList();
+            });
+
+            const delBtn = document.createElement('button');
+            delBtn.textContent = '❌';
+            delBtn.style.padding = '2px 6px';
+            delBtn.style.fontSize = '12px';
+            delBtn.style.lineHeight = '1';
+            delBtn.style.flexShrink = '0';
+            delBtn.addEventListener('click', () => {
+                if (confirm(`确定删除 {{${macro.name}}} ?`)) {
+                    randomMacros.splice(idx, 1);
+                    localStorage.setItem(MACROS_KEY, JSON.stringify(randomMacros));
+                    renderMacroList();
+                }
+            });
+
+            div.appendChild(checkbox);
+            div.appendChild(nameSpan);
+            div.appendChild(rangeSpan);
+            div.appendChild(editBtn);
+            div.appendChild(delBtn);
+
+            container.appendChild(div);
+        });
+    }
+
+    // 添加随机数宏
+    document.getElementById('sp-add-macro-btn').addEventListener('click', () => {
+        const minInput = document.getElementById('sp-macro-min');
+        const maxInput = document.getElementById('sp-macro-max');
+        
+        const min = parseInt(minInput.value, 10);
+        const max = parseInt(maxInput.value, 10);
+        
+        if (isNaN(min) || isNaN(max)) {
+            alert('请输入有效的数字');
+            return;
+        }
+        
+        if (min > max) {
+            alert('最小值不能大于最大值');
+            return;
+        }
+        
+        // 生成宏名称 (number1, number2, ...)
+        const existingNumbers = randomMacros
+            .map(m => m.name.match(/^number(\d+)$/))
+            .filter(Boolean)
+            .map(m => parseInt(m[1], 10));
+        
+        const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+        const macroName = `number${nextNumber}`;
+        
+        randomMacros.push({
+            name: macroName,
+            min: min,
+            max: max,
+            enabled: true
+        });
+        
+        localStorage.setItem(MACROS_KEY, JSON.stringify(randomMacros));
+        
+        minInput.value = '';
+        maxInput.value = '';
+        
+        renderMacroList();
+        debugLog(`添加随机数宏: {{${macroName}}} [${min} ~ ${max}]`);
+    });
+
+    // 保存配置
+    document.getElementById('sp-save-macros-btn').addEventListener('click', () => {
+        localStorage.setItem(MACROS_KEY, JSON.stringify(randomMacros));
+        alert('随机数宏配置已保存');
+        debugLog('保存随机数宏配置', randomMacros);
+    });
+
+    loadRandomMacros();
+    renderMacroList();
+    debugLog('进入 随机数宏配置面板');
+}
+
  function showChatConfig() {
     const content = document.getElementById('sp-content-area');
     content.innerHTML = `
@@ -728,7 +922,7 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
     const sliderInput = document.getElementById('sp-chat-slider');
     const sliderValue = document.getElementById('sp-chat-slider-value');
 
-    // 初始化 slider 值（持久化）
+    // 初始化 slider 值(持久化)
     const savedCount = localStorage.getItem('friendCircleChatCount');
     if (savedCount) {
         sliderInput.value = savedCount;
@@ -811,7 +1005,7 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
     loadRegexList();
 
     // ---------------- 获取聊天条数并调试显示 ----------------
-    // 渲染到调试面板，而不是用 console/debugLog
+    // 渲染到调试面板,而不是用 console/debugLog
 function renderMessagesForDebug(messages) {
     const debugArea = document.getElementById('sp-debug');
     if (!debugArea) return;
@@ -863,10 +1057,10 @@ async function getLastMessages() {
             })
             .filter(Boolean);
 
-        // 🔥 直接删除这行缓存！
+        // 🔥 直接删除这行缓存!
         // localStorage.setItem('cuttedLastMessages', JSON.stringify(textMessages));
 
-        debugLog(`提取到最后 ${textMessages.length} 条消息（已正则修剪）`);
+        debugLog(`提取到最后 ${textMessages.length} 条消息(已正则修剪)`);
         return textMessages;
     } catch (e) {
         console.error('getLastMessages 出错', e);
@@ -881,12 +1075,12 @@ async function getLastMessages() {
     fetchAndCountMessages();
     debugLog('进入 聊天配置面板');
 }
-// 添加到主代码中，与其他 show* 函数并列
+// 添加到主代码中,与其他 show* 函数并列
 async function showWorldbookPanel() {
     content.innerHTML = `
     <div style="padding: 12px; background: #f4f4f4; border-radius: 8px; max-width: 800px; margin: 0 auto;">
         <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
-            <input type="text" id="sp-worldbook-input" placeholder="输入世界书名称（如 realworld）" style="
+            <input type="text" id="sp-worldbook-input" placeholder="输入世界书名称(如 realworld)" style="
                 flex: 1; 
                 padding: 6px 8px; 
                 border-radius: 4px; 
@@ -1068,7 +1262,7 @@ async function showWorldbookPanel() {
 }
 
 // ---------- 提取最近聊天 ----------  
-    // 🔥 在 showGenPanel() 内，替换原 getLastMessages 函数为以下（添加正则修剪逻辑，与 chat config 一致）
+    // 🔥 在 showGenPanel() 内,替换原 getLastMessages 函数为以下(添加正则修剪逻辑,与 chat config 一致)
 async function getLastMessages() {
     try {
         const ctx = SillyTavern.getContext();
@@ -1077,7 +1271,7 @@ async function getLastMessages() {
         const count = parseInt(localStorage.getItem('friendCircleChatCount') || 10, 10);
         const lastMessages = ctx.chat.slice(-count);
 
-        // 🔥 新增：从 chat config 加载并应用正则修剪
+        // 🔥 新增:从 chat config 加载并应用正则修剪
         const regexListRaw = JSON.parse(localStorage.getItem('friendCircleRegexList') || '[]');
         const regexList = regexListRaw
             .filter(r => r.enabled)
@@ -1108,10 +1302,10 @@ async function getLastMessages() {
             })
             .filter(Boolean);
 
-        // 🔥 可选：缓存修剪后消息（避免重复计算）
+        // 🔥 可选:缓存修剪后消息(避免重复计算)
         localStorage.setItem('cuttedLastMessages', JSON.stringify(textMessages));
 
-        debugLog(`提取到最后 ${textMessages.length} 条消息（已正则修剪）`, textMessages.slice(0, 5)); // 只 log 前2条防刷屏
+        debugLog(`提取到最后 ${textMessages.length} 条消息(已正则修剪)`, textMessages.slice(0, 5)); // 只 log 前2条防刷屏
         return textMessages;
     } catch (e) {
         console.error('getLastMessages 出错', e);
@@ -1134,6 +1328,28 @@ const TUOGUAN_MODE_KEY = 'friendCircleTuoguanMode';
 function getMessageId(msg) {
     // 使用多个属性组合生成唯一ID
     return `${msg.send_date || ''}_${msg.mes ? msg.mes.substring(0, 50) : ''}_${msg.is_user}`;
+}
+
+// 🎯 新增:随机数宏替换函数
+function replaceRandomMacros(text) {
+    const MACROS_KEY = 'friendCircleRandomMacros';
+    const macros = JSON.parse(localStorage.getItem(MACROS_KEY) || '[]');
+    
+    // 只处理启用的宏
+    const enabledMacros = macros.filter(m => m.enabled !== false);
+    
+    let result = text;
+    const replacements = {}; // 记录每个宏的替换值
+    
+    enabledMacros.forEach(macro => {
+        const pattern = new RegExp(`\\{\\{${macro.name}\\}\\}`, 'g');
+        // 生成随机数
+        const randomValue = Math.floor(Math.random() * (macro.max - macro.min + 1)) + macro.min;
+        result = result.replace(pattern, randomValue.toString());
+        replacements[macro.name] = randomValue; // 记录替换值
+    });
+    
+    return { text: result, replacements };
 }
 
 function showGenPanel() {  
@@ -1183,7 +1399,7 @@ function showGenPanel() {
         }  
     }
 
-    // 🎲 新增：加载随机提示词
+    // 🎲 新增:加载随机提示词
     function loadRandomPrompts() {  
         try {  
             const raw = localStorage.getItem(RANDOM_PROMPTS_KEY);  
@@ -1194,19 +1410,19 @@ function showGenPanel() {
         }  
     }
 
-    // 🎲 新增：从已启用的随机提示词中随机抽取1条
+    // 🎲 新增:从已启用的随机提示词中随机抽取1条
     function getRandomPrompt() {
         const randomPrompts = loadRandomPrompts();
         const enabledRandomPrompts = randomPrompts.filter(p => p.enabled);
         
         if (enabledRandomPrompts.length === 0) {
-            debugLog('随机提示词：没有启用的随机提示词');
+            debugLog('随机提示词:没有启用的随机提示词');
             return null;
         }
         
         const randomIndex = Math.floor(Math.random() * enabledRandomPrompts.length);
         const selected = enabledRandomPrompts[randomIndex];
-        debugLog(`随机提示词：从 ${enabledRandomPrompts.length} 条中抽取了第 ${randomIndex + 1} 条`);
+        debugLog(`随机提示词:从 ${enabledRandomPrompts.length} 条中抽取了第 ${randomIndex + 1} 条`);
         return selected.text;
     }
     
@@ -1220,18 +1436,39 @@ function showGenPanel() {
             return;
         }
         
-        // 🎲 修改：加载固定提示词
+        // 🎲 修改:加载固定提示词
         const enabledPrompts = loadUserPrompts().filter(p => p.enabled).map(p => p.text);
         
-        // 🎲 新增：随机抽取1条随机提示词
+        // 🎲 新增:随机抽取1条随机提示词
         const randomPrompt = getRandomPrompt();
         
-        // 🎲 新增：将随机提示词加入固定提示词末尾
+        // 🎲 新增:将随机提示词加入固定提示词末尾
         const allPrompts = [...enabledPrompts];
         if (randomPrompt) {
             allPrompts.push(randomPrompt);
-            debugLog(`随机提示词：已添加 "${randomPrompt.substring(0, 50)}..."`);
+            debugLog(`随机提示词:已添加 "${randomPrompt.substring(0, 50)}..."`);
         }
+        
+        // 🎯 新增:对所有提示词进行随机数宏替换
+        const replacedPrompts = [];
+        const allReplacements = {}; // 汇总所有替换信息
+        
+        allPrompts.forEach(prompt => {
+            const { text, replacements } = replaceRandomMacros(prompt);
+            replacedPrompts.push(text);
+            // 合并替换信息
+            Object.assign(allReplacements, replacements);
+        });
+        
+        // 生成替换详情字符串
+        const replacementDetails = Object.keys(allReplacements).length > 0
+            ? Object.entries(allReplacements)
+                .map(([name, value]) => `{{${name}}}=${value}`)
+                .join('，')
+            : '无';
+        
+        debugLog(`已加载 ${enabledPrompts.length} 条固定提示词 + ${randomPrompt ? 1 : 0} 条随机提示词`);
+        debugLog(`随机数宏替换完成: ${replacementDetails}`);
         
         let worldbookContent = [];
         
@@ -1306,13 +1543,12 @@ function showGenPanel() {
             content: "第一部分和第二部分结束,以上的内容仅用来参考、打散、思考,严禁输出,严禁续写!以下开始最重要的第三部分,也是你作为文本处理大师最重要的任务:按照<Tasks></Tasks>中的所有要求,将从第一、二部分获取的原始信息加工成准确精美的html代码(如果<Tasks>中有要求)和xml标签包裹的特殊文本(如果<Tasks>中有要求)并输出,这也是你唯一要输出的内容!"
         });
         
-        // 🎲 修改：使用合并后的提示词列表（固定+随机）
-        if (allPrompts.length > 0) {
+        // 🎯 修改:使用替换后的提示词
+        if (replacedPrompts.length > 0) {
             messages.push({
                 role: "system",
-                content: `<Tasks>\n${allPrompts.join('\n')}\n严禁对聊天记录进行续写!严禁续写!严禁续写!这一条不可忽视!\n</Tasks>`
+                content: `<Tasks>\n${replacedPrompts.join('\n')}\n严禁对聊天记录进行续写!严禁续写!严禁续写!这一条不可忽视!\n</Tasks>`
             });
-            debugLog(`已加载 ${enabledPrompts.length} 条固定提示词 + ${randomPrompt ? 1 : 0} 条随机提示词`);
         }
         
         messages.push({
@@ -1408,7 +1644,7 @@ function showGenPanel() {
             if (autoEventHandler) {
                 try {
                     const { eventSource, event_types } = SillyTavern.getContext();
-                    eventSource.removeListener(event_types.CHARACTER_MESSAGE_RENDERED, autoEventHandler);
+                    eventSource.removeListener(event_types.GENERATION_ENDED, autoEventHandler);
                     debugLog('自动化模式:已移除旧的事件监听器');
                 } catch (e) {
                     console.error('移除旧监听器失败:', e);
@@ -1420,7 +1656,7 @@ function showGenPanel() {
             
             // 定义事件处理函数
             autoEventHandler = async (data) => {
-                debugLog('自动化模式:检测到 CHARACTER_MESSAGE_RENDERED 事件', data);
+                debugLog('自动化模式:检测到 GENERATION_ENDED 事件', data);
                 
                 const ctx = SillyTavern.getContext();
                 if (!ctx || !Array.isArray(ctx.chat) || ctx.chat.length === 0) {
@@ -1460,9 +1696,9 @@ function showGenPanel() {
                 }
             };
             
-            // 🔥 监听 CHARACTER_MESSAGE_RENDERED 事件
-            eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, autoEventHandler);
-            debugLog('自动化模式:已绑定 CHARACTER_MESSAGE_RENDERED 事件');
+            // 🔥 监听 GENERATION_ENDED 事件
+            eventSource.on(event_types.GENERATION_ENDED, autoEventHandler);
+            debugLog('自动化模式:已绑定 GENERATION_ENDED 事件');
             
         } else {
             if (autoBtn) autoBtn.textContent = '自动化';
@@ -1472,7 +1708,7 @@ function showGenPanel() {
             if (autoEventHandler) {
                 try {
                     const { eventSource, event_types } = SillyTavern.getContext();
-                    eventSource.removeListener(event_types.CHARACTER_MESSAGE_RENDERED, autoEventHandler);
+                    eventSource.removeListener(event_types.GENERATION_ENDED, autoEventHandler);
                     autoEventHandler = null;
                     debugLog('自动化模式:已移除事件监听');
                 } catch (e) {
@@ -1503,7 +1739,7 @@ function showGenPanel() {
         if (tuoguanEventHandler) {
             try {
                 const { eventSource, event_types } = SillyTavern.getContext();
-                eventSource.removeListener(event_types.CHARACTER_MESSAGE_RENDERED, tuoguanEventHandler);
+                eventSource.removeListener(event_types.GENERATION_ENDED, tuoguanEventHandler);
                 debugLog('托管模式:已移除旧的事件监听器');
             } catch (e) {
                 console.error('移除旧监听器失败:', e);
@@ -1515,7 +1751,7 @@ function showGenPanel() {
         
         // 定义事件处理函数
         tuoguanEventHandler = async (data) => {
-            debugLog('托管模式:检测到 CHARACTER_MESSAGE_RENDERED 事件', data);
+            debugLog('托管模式:检测到 GENERATION_ENDED 事件', data);
             
             const ctx = SillyTavern.getContext();
             if (!ctx || !Array.isArray(ctx.chat) || ctx.chat.length === 0) {
@@ -1595,9 +1831,9 @@ function showGenPanel() {
             debugLog('托管模式:自动注入聊天完成');
         };
         
-        // 🔥 监听 CHARACTER_MESSAGE_RENDERED 事件
-        eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, tuoguanEventHandler);
-        debugLog('托管模式:已绑定 CHARACTER_MESSAGE_RENDERED 事件');
+        // 🔥 监听 GENERATION_ENDED 事件
+        eventSource.on(event_types.GENERATION_ENDED, tuoguanEventHandler);
+        debugLog('托管模式:已绑定 GENERATION_ENDED 事件');
         
     } else {
         if (tuoguanBtn) tuoguanBtn.textContent = '托管';
@@ -1607,7 +1843,7 @@ function showGenPanel() {
         if (tuoguanEventHandler) {
             try {
                 const { eventSource, event_types } = SillyTavern.getContext();
-                eventSource.removeListener(event_types.CHARACTER_MESSAGE_RENDERED, tuoguanEventHandler);
+                eventSource.removeListener(event_types.GENERATION_ENDED, tuoguanEventHandler);
                 tuoguanEventHandler = null;
                 debugLog('托管模式:已移除事件监听');
             } catch (e) {
@@ -1706,6 +1942,7 @@ function showGenPanel() {
           if (key === 'api') showApiConfig();
           else if (key === 'prompt') showPromptConfig();
           else if (key === 'random-prompt') showRandomPromptConfig(); // 🎲 新增
+          else if (key === 'random-macro') showRandomMacroConfig(); // 🎯 新增
           else if (key === 'chat') showChatConfig();
           else if (key === 'worldbook') showWorldbookPanel();
           else if (key === 'gen') showGenPanel();
