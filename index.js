@@ -47,8 +47,8 @@ if (savedTop && savedRight) {
   fab.style.top = savedTop;
   fab.style.right = savedRight;
 } else {
-  const centerTop = (window.innerHeight / 2 - 16) + 'px';   // 32px按钮高度/2=16
-  const centerRight = (window.innerWidth / 2 - 16) + 'px';  // 32px按钮宽度/2=16
+  const centerTop = (window.innerHeight / 2 - 16) + 'px';
+  const centerRight = (window.innerWidth / 2 - 16) + 'px';
   fab.style.top = centerTop;
   fab.style.right = centerRight;
 }
@@ -62,8 +62,8 @@ fab.style.width = '32px';
 fab.style.height = '32px';
 fab.style.textAlign = 'center';
 fab.style.borderRadius = '50%';
-fab.style.background = 'transparent'; // 背景透明
-fab.style.boxShadow = 'none'; // 去掉阴影
+fab.style.background = 'transparent';
+fab.style.boxShadow = 'none';
 document.body.appendChild(fab);
 
 // 拖动逻辑
@@ -81,11 +81,9 @@ document.body.appendChild(fab);
     const dx = clientX - startX;
     const dy = clientY - startY;
 
-    // 计算新位置(右上角模式:改变 top 和 right)
     let newTop = startTop + dy;
     let newRight = startRight - dx;
 
-    // 限制范围(不能拖出屏幕)
     const maxTop = window.innerHeight - fab.offsetHeight;
     const maxRight = window.innerWidth - fab.offsetWidth;
     newTop = Math.max(0, Math.min(maxTop, newTop));
@@ -99,7 +97,6 @@ document.body.appendChild(fab);
     if (!isDragging) return;
     isDragging = false;
     fab.style.cursor = 'grab';
-    // 保存位置
     localStorage.setItem('starFabTop', fab.style.top);
     localStorage.setItem('starFabRight', fab.style.right);
   }
@@ -113,7 +110,6 @@ document.body.appendChild(fab);
     fab.style.cursor = 'grabbing';
   }
 
-  // 绑定事件(PC + 手机)
   fab.addEventListener('mousedown', onStart);
   fab.addEventListener('touchstart', onStart);
   document.addEventListener('mousemove', onMove);
@@ -126,10 +122,9 @@ document.body.appendChild(fab);
       const panel = document.createElement('div');
       panel.id = 'star-panel';
       panel.innerHTML = `
-       
-
         <div class="sp-grid">
           <div class="sp-btn" data-key="api">API配置</div>
+          <div class="sp-btn" data-key="system-prompt">系统提示词</div>
           <div class="sp-btn" data-key="prompt">提示词配置</div>
           <div class="sp-btn" data-key="random-prompt">随机提示词</div>
           <div class="sp-btn" data-key="random-macro">随机数宏</div>
@@ -146,48 +141,45 @@ document.body.appendChild(fab);
       `;
       document.body.appendChild(panel);
 
-
-// 模拟点击"生成"按钮,让它默认显示生成面板
 setTimeout(() => {
   const genBtn = panel.querySelector('.sp-btn[data-key="gen"]');
   if (genBtn) genBtn.click();
 }, 0);
-      // fab点击展开/关闭
+
       fab.addEventListener('click', () => {
         panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
       });
 
-      // 简单保存函数
       function saveSettings() {
         if (ctx.saveSettingsDebounced) ctx.saveSettingsDebounced();
         else console.warn('saveSettingsDebounced not available');
       }
 
-      // 调试输出
       function debugLog(...args) {
         const dbg = document.getElementById('sp-debug');
         if (dbg) dbg.innerText = args.join(' ');
         if (window.DEBUG_STAR_PANEL) console.log('[pyq-creator]', ...args);
       }
 
-      // 主内容区
       const content = panel.querySelector('#sp-content-area');
 
-      // 四个子面板的最小实现
      function showApiConfig() {
   const ctx = SillyTavern.getContext();
   const content = document.getElementById("sp-content-area");
 
   content.innerHTML = `
-    <div class="sp-section">
-      <label>API URL: <input type="text" id="api-url-input"></label><br>
-      <label>API Key: <input type="text" id="api-key-input"></label><br>
-      <label>模型: <select id="api-model-select"></select></label><br>
-      <button id="api-save-btn">保存配置</button>
-      <button id="api-test-btn">测试连接</button>
-      <button id="api-refresh-models-btn">刷新模型</button>
-      <div id="api-status" style="margin-top:6px;font-size:12px;color:lightgreen;"></div>
-      <pre id="api-debug" style="margin-top:6px;font-size:12px;color:yellow;white-space:pre-wrap;"></pre>
+    <div style="padding: 12px; background: #4D4135; border-radius: 8px;">
+      <h3 style="color: #A3C956; margin-bottom: 12px; text-shadow: none;">🔌 API配置</h3>
+      <label style="color: #ddd; text-shadow: none;">API URL: <input type="text" id="api-url-input" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; margin-top: 4px;"></label><br><br>
+      <label style="color: #ddd; text-shadow: none;">API Key: <input type="text" id="api-key-input" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; margin-top: 4px;"></label><br><br>
+      <label style="color: #ddd; text-shadow: none;">模型: <select id="api-model-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; margin-top: 4px;"></select></label><br><br>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button id="api-save-btn" style="padding: 8px 16px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer;">保存配置</button>
+        <button id="api-test-btn" style="padding: 8px 16px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer;">测试连接</button>
+        <button id="api-refresh-models-btn" style="padding: 8px 16px; background: #5B6262; color: white; border: none; border-radius: 4px; cursor: pointer;">刷新模型</button>
+      </div>
+      <div id="api-status" style="margin-top:8px;font-size:12px;color:#A3C956;text-shadow:none;"></div>
+      <pre id="api-debug" style="margin-top:8px;font-size:12px;color:#ddd;white-space:pre-wrap;text-shadow:none;background:#5B6262;padding:8px;border-radius:4px;max-height:100px;overflow-y:auto;"></pre>
     </div>
   `;
 
@@ -199,7 +191,6 @@ setTimeout(() => {
     debugArea.textContent = `${title}:\n${typeof data === 'object' ? JSON.stringify(data, null, 2) : data}`;
   }
 
-  // 初始化:加载本地存储
   document.getElementById("api-url-input").value = localStorage.getItem("independentApiUrl") || "";
   document.getElementById("api-key-input").value = localStorage.getItem("independentApiKey") || "";
   const savedModel = localStorage.getItem("independentApiModel");
@@ -244,7 +235,6 @@ setTimeout(() => {
     modelSelect.value = savedModel;
   }
 
-  // 保存配置
   document.getElementById("api-save-btn").addEventListener("click", () => {
     const url = document.getElementById("api-url-input").value;
     const key = document.getElementById("api-key-input").value;
@@ -260,12 +250,10 @@ setTimeout(() => {
       else if (o.textContent.endsWith("(已保存)")) o.textContent = o.value;
     });
 
-    document.getElementById("api-status").textContent = "已保存";
+    document.getElementById("api-status").textContent = "✅ 已保存";
     debugLog("保存API配置", { url, model });
   });
 
-  // 测试连接
- // 测试连接(始终向模型发送 ping 并显示返回)
 document.getElementById("api-test-btn").addEventListener("click", async () => {
   const urlRaw = document.getElementById("api-url-input").value || localStorage.getItem("independentApiUrl");
   const key = document.getElementById("api-key-input").value || localStorage.getItem("independentApiKey");
@@ -293,21 +281,19 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
 
     if (!res.ok) throw new Error(`chat/completions 返回 ${res.status}`);
 
-    const data = await res.json(); // ✅ 读取返回 JSON
-    document.getElementById("api-status").textContent = `模型 ${model} 可用(ping 成功)`;
+    const data = await res.json();
+    document.getElementById("api-status").textContent = `✅ 模型 ${model} 可用(ping 成功)`;
     debugLog("ping 成功", data);
 
-    // 可选:显示模型返回内容的第一条
     if (data.choices && data.choices[0]?.message?.content) {
       console.log("模型返回:", data.choices[0].message.content);
     }
   } catch (e) {
-    document.getElementById("api-status").textContent = "连接失败: " + (e.message || e);
+    document.getElementById("api-status").textContent = "❌ 连接失败: " + (e.message || e);
     debugLog("ping 失败", e.message || e);
   }
 });
 
-  // 拉取模型
   async function fetchAndPopulateModels(force = false) {
     const url = document.getElementById("api-url-input").value || localStorage.getItem("independentApiUrl");
     const key = document.getElementById("api-key-input").value || localStorage.getItem("independentApiKey");
@@ -338,9 +324,9 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
       localStorage.setItem("independentApiModelsFetchedAt", String(Date.now()));
 
       populateModelSelect(ids);
-      document.getElementById("api-status").textContent = `已拉取 ${ids.length} 个模型`;
+      document.getElementById("api-status").textContent = `✅ 已拉取 ${ids.length} 个模型`;
     } catch (e) {
-      document.getElementById("api-status").textContent = "拉取失败: " + e.message;
+      document.getElementById("api-status").textContent = "❌ 拉取失败: " + e.message;
       debugLog("拉取模型失败", e.message);
     }
   }
@@ -360,19 +346,170 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
     await fetchAndPopulateModels(true);
   });
 
-  // 自动首次拉取一次
   fetchAndPopulateModels(false);
+}
+
+// ========== 系统提示词配置面板 ==========
+function showSystemPromptConfig() {
+    const content = document.getElementById('sp-content-area');
+    
+    const defaults = {
+        systemMain: `你是文本处理助手。接下来会收到三部分信息：
+1. <WorldBook_Reference>：背景参考资料（仅参考，不输出）
+2. <ChatHistory_Reference>：聊天记录（仅参考，不输出）
+3. <Tasks>：具体任务要求
+
+请直接按<Tasks>中的要求输出结果，不要添加任何开场白、解释或确认语句。`,
+        
+        systemMiddle: `以上参考信息结束。接下来是任务要求，请直接输出结果内容：`,
+        
+        tasksWrapper: `注意：只输出摘要/处理结果本身，不要续写聊天内容。`,
+        
+        assistantPrefill: ``
+    };
+    
+    const saved = JSON.parse(localStorage.getItem('friendCircleSystemPrompts') || '{}');
+    const config = { ...defaults, ...saved };
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    content.innerHTML = `
+    <div style="padding: 12px; background: #2a2a3e; border-radius: 8px; max-width: 700px; margin: 0 auto;">
+        <h3 style="color: #fff; margin-bottom: 16px; text-shadow: none;">⚙️ 系统提示词配置</h3>
+        <p style="color: #aaa; font-size: 12px; margin-bottom: 16px; text-shadow: none;">
+            这些是发送给摘要API的系统级指令，修改后点击保存生效
+        </p>
+        
+        <div style="margin-bottom: 16px;">
+            <label style="color: #fff; display: block; margin-bottom: 6px; text-shadow: none;">
+                📌 主系统提示词（开头的角色设定）
+            </label>
+            <textarea id="sp-sys-main" rows="6" style="
+                width: 100%; 
+                padding: 8px; 
+                border-radius: 4px; 
+                background: #1a1a2e; 
+                color: #fff; 
+                border: 1px solid #444;
+                resize: vertical;
+                text-shadow: none;
+            ">${escapeHtml(config.systemMain)}</textarea>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+            <label style="color: #fff; display: block; margin-bottom: 6px; text-shadow: none;">
+                📌 过渡提示词（世界书和聊天记录之后，任务之前）
+            </label>
+            <textarea id="sp-sys-middle" rows="3" style="
+                width: 100%; 
+                padding: 8px; 
+                border-radius: 4px; 
+                background: #1a1a2e; 
+                color: #fff; 
+                border: 1px solid #444;
+                resize: vertical;
+                text-shadow: none;
+            ">${escapeHtml(config.systemMiddle)}</textarea>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+            <label style="color: #fff; display: block; margin-bottom: 6px; text-shadow: none;">
+                📌 任务包装后缀（加在 &lt;Tasks&gt; 末尾的提醒）
+            </label>
+            <textarea id="sp-sys-tasks" rows="2" style="
+                width: 100%; 
+                padding: 8px; 
+                border-radius: 4px; 
+                background: #1a1a2e; 
+                color: #fff; 
+                border: 1px solid #444;
+                resize: vertical;
+                text-shadow: none;
+            ">${escapeHtml(config.tasksWrapper)}</textarea>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+            <label style="color: #fff; display: block; margin-bottom: 6px; text-shadow: none;">
+                📌 Assistant预填充（可选，留空=不使用）
+            </label>
+            <textarea id="sp-sys-prefill" rows="2" placeholder="留空表示不预填充" style="
+                width: 100%; 
+                padding: 8px; 
+                border-radius: 4px; 
+                background: #1a1a2e; 
+                color: #fff; 
+                border: 1px solid #444;
+                resize: vertical;
+                text-shadow: none;
+            ">${escapeHtml(config.assistantPrefill)}</textarea>
+            <p style="color: #888; font-size: 11px; margin-top: 4px; text-shadow: none;">
+                ⚠️ 对Claude建议留空，对Gemini可能需要填写
+            </p>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+            <button id="sp-sys-save" style="
+                flex: 1;
+                padding: 10px; 
+                background: #28a745; 
+                color: white; 
+                border: none; 
+                border-radius: 4px;
+                cursor: pointer;
+            ">💾 保存配置</button>
+            
+            <button id="sp-sys-reset" style="
+                padding: 10px 20px; 
+                background: #dc3545; 
+                color: white; 
+                border: none; 
+                border-radius: 4px;
+                cursor: pointer;
+            ">🔄 恢复默认</button>
+        </div>
+        
+        <div id="sp-sys-status" style="margin-top: 10px; color: #4caf50; font-size: 12px; text-shadow: none;"></div>
+    </div>
+    `;
+    
+    document.getElementById('sp-sys-save').addEventListener('click', () => {
+        const newConfig = {
+            systemMain: document.getElementById('sp-sys-main').value,
+            systemMiddle: document.getElementById('sp-sys-middle').value,
+            tasksWrapper: document.getElementById('sp-sys-tasks').value,
+            assistantPrefill: document.getElementById('sp-sys-prefill').value
+        };
+        localStorage.setItem('friendCircleSystemPrompts', JSON.stringify(newConfig));
+        document.getElementById('sp-sys-status').textContent = '✅ 配置已保存！';
+        debugLog('系统提示词配置已保存', newConfig);
+    });
+    
+    document.getElementById('sp-sys-reset').addEventListener('click', () => {
+        if (confirm('确定要恢复默认提示词吗？')) {
+            localStorage.removeItem('friendCircleSystemPrompts');
+            showSystemPromptConfig();
+            debugLog('系统提示词已恢复默认');
+        }
+    });
+    
+    debugLog('进入 系统提示词配置面板');
 }
 
       function showPromptConfig() {
     content.innerHTML = `
-        <div style="padding: 12px; background: #f4f4f4; border-radius: 8px; max-width: 600px; margin: 0 auto;">
-            <h3 style="color: #000; margin-bottom: 12px;">固定提示词配置</h3>
-            <textarea rows="3" id="sp-prompt-text" placeholder="输入提示词" style="width: 100%; padding: 8px; border-radius: 4px;"></textarea><br>
-            <div id="sp-prompt-list" style="max-height: 200px; overflow-y: auto; margin-top: 12px; border-top: 1px solid #ccc; padding-top: 6px; color: black;"></div>
-            <input type="text" id="sp-prompt-search" placeholder="按标签搜索" style="width: 70%; padding: 8px; margin-top: 8px; border-radius: 4px;">
-            <button id="sp-prompt-search-btn" style="padding: 8px; margin-left: 8px; border-radius: 4px; background-color: #007bff; color: white;">搜索</button>
-            <button id="save-prompts-btn" style="margin-top: 12px; padding: 8px; width: 100%; background-color: #28a745; color: white; border: none; border-radius: 4px;">保存提示词</button>
+        <div style="padding: 12px; background: #4D4135; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+            <h3 style="color: #A3C956; margin-bottom: 12px; text-shadow: none;">📝 固定提示词配置</h3>
+            <textarea rows="3" id="sp-prompt-text" placeholder="输入提示词" style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254;"></textarea><br>
+            <div id="sp-prompt-list" style="max-height: 200px; overflow-y: auto; margin-top: 12px; border-top: 1px solid #588254; padding-top: 6px;"></div>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <input type="text" id="sp-prompt-search" placeholder="按标签搜索" style="flex: 1; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254;">
+                <button id="sp-prompt-search-btn" style="padding: 8px 16px; border-radius: 4px; background: #588254; color: white; border: none; cursor: pointer;">搜索</button>
+            </div>
+            <button id="save-prompts-btn" style="margin-top: 12px; padding: 8px; width: 100%; background: #A3C956; color: #4D4135; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">保存提示词</button>
         </div>
     `;
 
@@ -380,14 +517,12 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
     let friendCirclePrompts = [];
     let promptTagFilter = "";
 
-    // Load user prompts from localStorage
     function loadUserPrompts() {
         const raw = localStorage.getItem(PROMPTS_KEY);
         friendCirclePrompts = raw ? JSON.parse(raw) : [];
         return friendCirclePrompts;
     }
 
-    // Render the prompt list
     function renderPromptList() {
         const container = document.getElementById('sp-prompt-list');
         container.innerHTML = '';
@@ -399,10 +534,9 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
 
             const div = document.createElement('div');
             div.style.marginBottom = '8px';
-            div.style.borderBottom = '1px solid #eee';
+            div.style.borderBottom = '1px solid #588254';
             div.style.paddingBottom = '6px';
 
-            // First row (checkbox, text, buttons)
             const row = document.createElement('div');
             row.style.display = 'flex';
             row.style.alignItems = 'center';
@@ -422,16 +556,27 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             span.style.overflow = 'hidden';
             span.style.textOverflow = 'ellipsis';
             span.style.whiteSpace = 'nowrap';
+            span.style.color = '#ddd';
+            span.style.textShadow = 'none';
 
             const editBtn = document.createElement('button');
             editBtn.textContent = '✏️';
             editBtn.style.marginLeft = '8px';
+            editBtn.style.padding = '4px 8px';
+            editBtn.style.background = '#D87E5E';
+            editBtn.style.border = 'none';
+            editBtn.style.borderRadius = '3px';
+            editBtn.style.cursor = 'pointer';
             editBtn.addEventListener('click', () => {
                 const textarea = document.createElement('textarea');
                 textarea.value = p.text;
                 textarea.style.flex = '1';
                 textarea.style.minHeight = '60px';
                 textarea.style.resize = 'vertical';
+                textarea.style.background = '#5B6262';
+                textarea.style.color = '#fff';
+                textarea.style.border = '1px solid #588254';
+                textarea.style.borderRadius = '4px';
                 row.replaceChild(textarea, span);
 
                 textarea.addEventListener('blur', () => {
@@ -448,6 +593,11 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             const tagBtn = document.createElement('button');
             tagBtn.textContent = '🏷️';
             tagBtn.style.marginLeft = '8px';
+            tagBtn.style.padding = '4px 8px';
+            tagBtn.style.background = '#588254';
+            tagBtn.style.border = 'none';
+            tagBtn.style.borderRadius = '3px';
+            tagBtn.style.cursor = 'pointer';
             tagBtn.addEventListener('click', () => {
                 const newTag = prompt('输入标签:');
                 if (newTag) {
@@ -463,6 +613,11 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             const delBtn = document.createElement('button');
             delBtn.textContent = '❌';
             delBtn.style.marginLeft = '8px';
+            delBtn.style.padding = '4px 8px';
+            delBtn.style.background = '#D87E5E';
+            delBtn.style.border = 'none';
+            delBtn.style.borderRadius = '3px';
+            delBtn.style.cursor = 'pointer';
             delBtn.addEventListener('click', () => {
                 friendCirclePrompts.splice(idx, 1);
                 localStorage.setItem(PROMPTS_KEY, JSON.stringify(friendCirclePrompts));
@@ -477,7 +632,6 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
 
             div.appendChild(row);
 
-            // Tags row
             if (p.tags && p.tags.length > 0) {
                 const tagsRow = document.createElement('div');
                 tagsRow.style.marginLeft = '20px';
@@ -491,8 +645,10 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
                     tagEl.style.margin = '0 6px 6px 0';
                     tagEl.style.fontSize = '12px';
                     tagEl.style.borderRadius = '10px';
-                    tagEl.style.background = '#e0e0e0';
+                    tagEl.style.background = '#588254';
+                    tagEl.style.color = '#fff';
                     tagEl.style.cursor = 'pointer';
+                    tagEl.style.textShadow = 'none';
                     tagEl.title = '点击删除标签';
                     tagEl.addEventListener('click', () => {
                         friendCirclePrompts[idx].tags.splice(tIdx, 1);
@@ -509,26 +665,23 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
         });
     }
 
-    // Add new prompt
     document.getElementById('sp-prompt-search-btn').addEventListener('click', () => {
         promptTagFilter = document.getElementById('sp-prompt-search').value.trim().toLowerCase();
         renderPromptList();
     });
 
-    // Save prompts
     document.getElementById('save-prompts-btn').addEventListener('click', () => {
         localStorage.setItem(PROMPTS_KEY, JSON.stringify(friendCirclePrompts));
         alert('提示词已保存');
         debugLog('保存用户自定义提示词', friendCirclePrompts);
     });
 
-    // Add prompt
     document.getElementById('sp-prompt-text').addEventListener('blur', () => {
         const promptText = document.getElementById('sp-prompt-text').value.trim();
         if (promptText) {
             friendCirclePrompts.push({ text: promptText, enabled: true, tags: [] });
             localStorage.setItem(PROMPTS_KEY, JSON.stringify(friendCirclePrompts));
-            document.getElementById('sp-prompt-text').value = ''; // Clear the input
+            document.getElementById('sp-prompt-text').value = '';
             renderPromptList();
         }
     });
@@ -538,17 +691,18 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
     debugLog('进入 提示词配置面板');
 }
 
-      // 🎲 新增:随机提示词配置面板
       function showRandomPromptConfig() {
     content.innerHTML = `
-        <div style="padding: 12px; background: #fff3cd; border-radius: 8px; max-width: 600px; margin: 0 auto;">
-            <h3 style="color: #000; margin-bottom: 12px;">🎲 随机提示词配置</h3>
-            <p style="color: #856404; font-size: 12px; margin-bottom: 12px;">每次生成时将从所有已开启的随机提示词中随机抽取1条</p>
-            <textarea rows="3" id="sp-random-prompt-text" placeholder="输入随机提示词" style="width: 100%; padding: 8px; border-radius: 4px;"></textarea><br>
-            <div id="sp-random-prompt-list" style="max-height: 200px; overflow-y: auto; margin-top: 12px; border-top: 1px solid #ccc; padding-top: 6px; color: black;"></div>
-            <input type="text" id="sp-random-prompt-search" placeholder="按标签搜索" style="width: 70%; padding: 8px; margin-top: 8px; border-radius: 4px;">
-            <button id="sp-random-prompt-search-btn" style="padding: 8px; margin-left: 8px; border-radius: 4px; background-color: #007bff; color: white;">搜索</button>
-            <button id="save-random-prompts-btn" style="margin-top: 12px; padding: 8px; width: 100%; background-color: #ff9800; color: white; border: none; border-radius: 4px;">保存随机提示词</button>
+        <div style="padding: 12px; background: #4D4135; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+            <h3 style="color: #D87E5E; margin-bottom: 12px; text-shadow: none;">🎲 随机提示词配置</h3>
+            <p style="color: #ddd; font-size: 12px; margin-bottom: 12px; text-shadow: none;">每次生成时将从所有已开启的随机提示词中随机抽取1条</p>
+            <textarea rows="3" id="sp-random-prompt-text" placeholder="输入随机提示词" style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254;"></textarea><br>
+            <div id="sp-random-prompt-list" style="max-height: 200px; overflow-y: auto; margin-top: 12px; border-top: 1px solid #588254; padding-top: 6px;"></div>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <input type="text" id="sp-random-prompt-search" placeholder="按标签搜索" style="flex: 1; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254;">
+                <button id="sp-random-prompt-search-btn" style="padding: 8px 16px; border-radius: 4px; background: #588254; color: white; border: none; cursor: pointer;">搜索</button>
+            </div>
+            <button id="save-random-prompts-btn" style="margin-top: 12px; padding: 8px; width: 100%; background: #D87E5E; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">保存随机提示词</button>
         </div>
     `;
 
@@ -573,7 +727,7 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
 
             const div = document.createElement('div');
             div.style.marginBottom = '8px';
-            div.style.borderBottom = '1px solid #eee';
+            div.style.borderBottom = '1px solid #588254';
             div.style.paddingBottom = '6px';
 
             const row = document.createElement('div');
@@ -595,16 +749,27 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             span.style.overflow = 'hidden';
             span.style.textOverflow = 'ellipsis';
             span.style.whiteSpace = 'nowrap';
+            span.style.color = '#ddd';
+            span.style.textShadow = 'none';
 
             const editBtn = document.createElement('button');
             editBtn.textContent = '✏️';
             editBtn.style.marginLeft = '8px';
+            editBtn.style.padding = '4px 8px';
+            editBtn.style.background = '#D87E5E';
+            editBtn.style.border = 'none';
+            editBtn.style.borderRadius = '3px';
+            editBtn.style.cursor = 'pointer';
             editBtn.addEventListener('click', () => {
                 const textarea = document.createElement('textarea');
                 textarea.value = p.text;
                 textarea.style.flex = '1';
                 textarea.style.minHeight = '60px';
                 textarea.style.resize = 'vertical';
+                textarea.style.background = '#5B6262';
+                textarea.style.color = '#fff';
+                textarea.style.border = '1px solid #588254';
+                textarea.style.borderRadius = '4px';
                 row.replaceChild(textarea, span);
 
                 textarea.addEventListener('blur', () => {
@@ -621,6 +786,11 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             const tagBtn = document.createElement('button');
             tagBtn.textContent = '🏷️';
             tagBtn.style.marginLeft = '8px';
+            tagBtn.style.padding = '4px 8px';
+            tagBtn.style.background = '#588254';
+            tagBtn.style.border = 'none';
+            tagBtn.style.borderRadius = '3px';
+            tagBtn.style.cursor = 'pointer';
             tagBtn.addEventListener('click', () => {
                 const newTag = prompt('输入标签:');
                 if (newTag) {
@@ -636,6 +806,11 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             const delBtn = document.createElement('button');
             delBtn.textContent = '❌';
             delBtn.style.marginLeft = '8px';
+            delBtn.style.padding = '4px 8px';
+            delBtn.style.background = '#D87E5E';
+            delBtn.style.border = 'none';
+            delBtn.style.borderRadius = '3px';
+            delBtn.style.cursor = 'pointer';
             delBtn.addEventListener('click', () => {
                 randomPrompts.splice(idx, 1);
                 localStorage.setItem(RANDOM_PROMPTS_KEY, JSON.stringify(randomPrompts));
@@ -663,8 +838,10 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
                     tagEl.style.margin = '0 6px 6px 0';
                     tagEl.style.fontSize = '12px';
                     tagEl.style.borderRadius = '10px';
-                    tagEl.style.background = '#ffeaa7';
+                    tagEl.style.background = '#D87E5E';
+                    tagEl.style.color = '#fff';
                     tagEl.style.cursor = 'pointer';
+                    tagEl.style.textShadow = 'none';
                     tagEl.title = '点击删除标签';
                     tagEl.addEventListener('click', () => {
                         randomPrompts[idx].tags.splice(tIdx, 1);
@@ -706,31 +883,29 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
     renderRandomPromptList();
     debugLog('进入 随机提示词配置面板');
 }
-
-      // 🎯 新增:随机数宏配置面板
       function showRandomMacroConfig() {
     content.innerHTML = `
-        <div style="padding: 12px; background: #e8f5e9; border-radius: 8px; max-width: 100%; margin: 0 auto; box-sizing: border-box;">
-            <h3 style="color: #000; margin-bottom: 12px;">🎯 随机数宏配置</h3>
-            <p style="color: #2e7d32; font-size: 12px; margin-bottom: 12px;">
+        <div style="padding: 12px; background: #4D4135; border-radius: 8px; max-width: 100%; margin: 0 auto; box-sizing: border-box;">
+            <h3 style="color: #A3C956; margin-bottom: 12px; text-shadow: none;">🎯 随机数宏配置</h3>
+            <p style="color: #ddd; font-size: 12px; margin-bottom: 12px; text-shadow: none;">
                 每次生成前会自动替换提示词中的随机数宏(如 {{number1}})为随机数值
             </p>
             
             <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
                 <input type="number" id="sp-macro-min" placeholder="最小值" 
-                    style="flex: 1; min-width: 80px; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                    style="flex: 1; min-width: 80px; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff;">
                 <input type="number" id="sp-macro-max" placeholder="最大值" 
-                    style="flex: 1; min-width: 80px; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
-                <button id="sp-add-macro-btn" style="padding: 8px 16px; background: #4caf50; color: white; border: none; border-radius: 4px; white-space: nowrap;">
+                    style="flex: 1; min-width: 80px; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff;">
+                <button id="sp-add-macro-btn" style="padding: 8px 16px; background: #588254; color: white; border: none; border-radius: 4px; white-space: nowrap; cursor: pointer;">
                     添加随机数宏
                 </button>
             </div>
             
-            <div id="sp-macro-list" style="max-height: 250px; overflow-y: auto; border: 1px solid #ccc; padding: 8px; background: white; border-radius: 4px;">
-                <div style="color: #666; text-align: center; padding: 20px;">暂无随机数宏,点击上方按钮添加</div>
+            <div id="sp-macro-list" style="max-height: 250px; overflow-y: auto; border: 1px solid #588254; padding: 8px; background: #5B6262; border-radius: 4px;">
+                <div style="color: #ddd; text-align: center; padding: 20px; text-shadow: none;">暂无随机数宏,点击上方按钮添加</div>
             </div>
             
-            <button id="sp-save-macros-btn" style="margin-top: 12px; padding: 10px; width: 100%; background: #2e7d32; color: white; border: none; border-radius: 4px;">
+            <button id="sp-save-macros-btn" style="margin-top: 12px; padding: 10px; width: 100%; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer;">
                 保存配置
             </button>
         </div>
@@ -739,20 +914,18 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
     const MACROS_KEY = 'friendCircleRandomMacros';
     let randomMacros = [];
 
-    // 加载随机数宏
     function loadRandomMacros() {
         const raw = localStorage.getItem(MACROS_KEY);
         randomMacros = raw ? JSON.parse(raw) : [];
         return randomMacros;
     }
 
-    // 渲染随机数宏列表
     function renderMacroList() {
         const container = document.getElementById('sp-macro-list');
         container.innerHTML = '';
 
         if (randomMacros.length === 0) {
-            container.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">暂无随机数宏,点击上方按钮添加</div>';
+            container.innerHTML = '<div style="color: #ddd; text-align: center; padding: 20px; text-shadow: none;">暂无随机数宏,点击上方按钮添加</div>';
             return;
         }
 
@@ -762,7 +935,8 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             div.style.alignItems = 'center';
             div.style.gap = '4px';
             div.style.marginBottom = '4px';
-            div.style.borderBottom = '1px solid #eee';
+            div.style.borderBottom = '1px solid #588254';
+            div.style.paddingBottom = '4px';
             div.style.flexWrap = 'nowrap';
             div.style.lineHeight = '1.2';
 
@@ -780,18 +954,20 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             const nameSpan = document.createElement('span');
             nameSpan.textContent = `{{${macro.name}}}`;
             nameSpan.style.fontWeight = 'bold';
-            nameSpan.style.color = '#2e7d32';
+            nameSpan.style.color = '#A3C956';
             nameSpan.style.fontSize = '12px';
             nameSpan.style.flexShrink = '0';
             nameSpan.style.whiteSpace = 'nowrap';
+            nameSpan.style.textShadow = 'none';
 
             const rangeSpan = document.createElement('span');
             rangeSpan.textContent = `[${macro.min} ~ ${macro.max}]`;
-            rangeSpan.style.color = '#666';
+            rangeSpan.style.color = '#ddd';
             rangeSpan.style.fontSize = '11px';
             rangeSpan.style.flexShrink = '0';
             rangeSpan.style.whiteSpace = 'nowrap';
             rangeSpan.style.marginRight = 'auto';
+            rangeSpan.style.textShadow = 'none';
 
             const editBtn = document.createElement('button');
             editBtn.textContent = '✏️';
@@ -799,6 +975,10 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             editBtn.style.fontSize = '12px';
             editBtn.style.lineHeight = '1';
             editBtn.style.flexShrink = '0';
+            editBtn.style.background = '#D87E5E';
+            editBtn.style.border = 'none';
+            editBtn.style.borderRadius = '3px';
+            editBtn.style.cursor = 'pointer';
             editBtn.addEventListener('click', () => {
                 const newMin = prompt('输入最小值:', macro.min);
                 if (newMin === null) return;
@@ -825,6 +1005,10 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             delBtn.style.fontSize = '12px';
             delBtn.style.lineHeight = '1';
             delBtn.style.flexShrink = '0';
+            delBtn.style.background = '#D87E5E';
+            delBtn.style.border = 'none';
+            delBtn.style.borderRadius = '3px';
+            delBtn.style.cursor = 'pointer';
             delBtn.addEventListener('click', () => {
                 if (confirm(`确定删除 {{${macro.name}}} ?`)) {
                     randomMacros.splice(idx, 1);
@@ -843,7 +1027,6 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
         });
     }
 
-    // 添加随机数宏
     document.getElementById('sp-add-macro-btn').addEventListener('click', () => {
         const minInput = document.getElementById('sp-macro-min');
         const maxInput = document.getElementById('sp-macro-max');
@@ -861,7 +1044,6 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             return;
         }
         
-        // 生成宏名称 (number1, number2, ...)
         const existingNumbers = randomMacros
             .map(m => m.name.match(/^number(\d+)$/))
             .filter(Boolean)
@@ -886,7 +1068,6 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
         debugLog(`添加随机数宏: {{${macroName}}} [${min} ~ ${max}]`);
     });
 
-    // 保存配置
     document.getElementById('sp-save-macros-btn').addEventListener('click', () => {
         localStorage.setItem(MACROS_KEY, JSON.stringify(randomMacros));
         alert('随机数宏配置已保存');
@@ -901,20 +1082,21 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
  function showChatConfig() {
     const content = document.getElementById('sp-content-area');
     content.innerHTML = `
-    <div style="padding:12px; background:#ffffff; color:#000000; border-radius:8px; max-width:500px; margin:0 auto;">
+    <div style="padding:12px; background:#4D4135; color:#fff; border-radius:8px; max-width:500px; margin:0 auto;">
+        <h3 style="color: #A3C956; margin-bottom: 12px; text-shadow: none;">💬 聊天配置</h3>
         <div id="sp-chat-slider-container" style="display:flex; align-items:center; margin-bottom:12px;">
-            <span style="margin-right:10px;">读取聊天条数: </span>
+            <span style="margin-right:10px; color: #ddd; text-shadow: none;">读取聊天条数: </span>
             <input type="range" id="sp-chat-slider" min="0" max="20" value="10" style="flex:1;">
-            <span id="sp-chat-slider-value" style="margin-left:4px;">10</span>
+            <span id="sp-chat-slider-value" style="margin-left:4px; color: #A3C956; text-shadow: none;">10</span>
         </div>
 
         <div style="margin-bottom:12px;">
-            <h4>正则修剪列表</h4>
+            <h4 style="color: #D87E5E; text-shadow: none;">正则修剪列表</h4>
             <div style="display:flex; gap:6px; margin-bottom:6px;">
-                <input type="text" id="sp-new-regex" placeholder="<example></example>" style="flex:1;">
-                <button id="sp-add-regex">添加</button>
+                <input type="text" id="sp-new-regex" placeholder="<example></example>" style="flex:1; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff;">
+                <button id="sp-add-regex" style="padding: 8px 12px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer;">添加</button>
             </div>
-            <div id="sp-regex-list" style="max-height:200px; overflow-y:auto; border:1px solid #ccc; padding:6px; border-radius:6px;"></div>
+            <div id="sp-regex-list" style="max-height:200px; overflow-y:auto; border:1px solid #588254; padding:6px; border-radius:6px; background: #5B6262;"></div>
         </div>
     </div>
     `;
@@ -922,7 +1104,6 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
     const sliderInput = document.getElementById('sp-chat-slider');
     const sliderValue = document.getElementById('sp-chat-slider-value');
 
-    // 初始化 slider 值(持久化)
     const savedCount = localStorage.getItem('friendCircleChatCount');
     if (savedCount) {
         sliderInput.value = savedCount;
@@ -936,7 +1117,6 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
         fetchAndCountMessages();
     });
 
-    // ---------------- 正则列表相关 ----------------
     const regexListContainer = document.getElementById('sp-regex-list');
     const addRegexInput = document.getElementById('sp-new-regex');
     const addRegexButton = document.getElementById('sp-add-regex');
@@ -950,6 +1130,8 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             div.style.alignItems = 'center';
             div.style.marginBottom = '4px';
             div.style.gap = '4px';
+            div.style.borderBottom = '1px solid #588254';
+            div.style.paddingBottom = '4px';
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -963,9 +1145,17 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
             text.textContent = item.pattern;
             text.style.flex = '1';
             text.style.wordBreak = 'break-all';
+            text.style.color = '#ddd';
+            text.style.textShadow = 'none';
 
             const editBtn = document.createElement('button');
             editBtn.textContent = '编辑';
+            editBtn.style.padding = '4px 8px';
+            editBtn.style.background = '#D87E5E';
+            editBtn.style.color = 'white';
+            editBtn.style.border = 'none';
+            editBtn.style.borderRadius = '3px';
+            editBtn.style.cursor = 'pointer';
             editBtn.addEventListener('click', () => {
                 const newVal = prompt('编辑正则', item.pattern);
                 if (newVal !== null) {
@@ -977,6 +1167,12 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
 
             const delBtn = document.createElement('button');
             delBtn.textContent = '删除';
+            delBtn.style.padding = '4px 8px';
+            delBtn.style.background = '#D87E5E';
+            delBtn.style.color = 'white';
+            delBtn.style.border = 'none';
+            delBtn.style.borderRadius = '3px';
+            delBtn.style.cursor = 'pointer';
             delBtn.addEventListener('click', () => {
                 list.splice(idx, 1);
                 localStorage.setItem('friendCircleRegexList', JSON.stringify(list));
@@ -1004,23 +1200,22 @@ document.getElementById("api-test-btn").addEventListener("click", async () => {
 
     loadRegexList();
 
-    // ---------------- 获取聊天条数并调试显示 ----------------
-    // 渲染到调试面板,而不是用 console/debugLog
 function renderMessagesForDebug(messages) {
     const debugArea = document.getElementById('sp-debug');
     if (!debugArea) return;
 
-    debugArea.innerHTML = ''; // 清空旧内容
+    debugArea.innerHTML = '';
     messages.forEach((text, i) => {
         const div = document.createElement('div');
         div.textContent = `[${i}] ${text}`;
         div.style.padding = '2px 0';
-        div.style.borderBottom = '1px solid #eee';
+        div.style.borderBottom = '1px solid #588254';
+        div.style.color = '#ddd';
+        div.style.textShadow = 'none';
         debugArea.appendChild(div);
     });
 }
 
-// ---------------- 获取聊天条数并调试显示 ----------------
 async function getLastMessages() {
     try {
         const ctx = SillyTavern.getContext();
@@ -1057,9 +1252,6 @@ async function getLastMessages() {
             })
             .filter(Boolean);
 
-        // 🔥 直接删除这行缓存!
-        // localStorage.setItem('cuttedLastMessages', JSON.stringify(textMessages));
-
         debugLog(`提取到最后 ${textMessages.length} 条消息(已正则修剪)`);
         return textMessages;
     } catch (e) {
@@ -1071,14 +1263,14 @@ async function getLastMessages() {
         await getLastMessages();
     }
 
-    // 初始化
     fetchAndCountMessages();
     debugLog('进入 聊天配置面板');
 }
-// 添加到主代码中,与其他 show* 函数并列
+
 async function showWorldbookPanel() {
     content.innerHTML = `
-    <div style="padding: 12px; background: #f4f4f4; border-radius: 8px; max-width: 800px; margin: 0 auto;">
+    <div style="padding: 12px; background: #4D4135; border-radius: 8px; max-width: 800px; margin: 0 auto;">
+        <h3 style="color: #A3C956; margin-bottom: 12px; text-shadow: none;">📚 世界书配置</h3>
         <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
             <input type="text" id="sp-worldbook-input" placeholder="输入世界书名称(如 realworld)" style="
                 flex: 1; 
@@ -1088,10 +1280,13 @@ async function showWorldbookPanel() {
                 font-size: 14px;
                 box-sizing: border-box;
                 min-width: 0;
+                background: #5B6262;
+                color: #fff;
+                border: 1px solid #588254;
             ">
             <button id="sp-search-btn" style="
                 padding: 6px 10px; 
-                background: #007bff; 
+                background: #588254; 
                 color: white; 
                 border: none; 
                 border-radius: 4px;
@@ -1103,7 +1298,7 @@ async function showWorldbookPanel() {
             ">🔎</button>
             <button id="sp-robot-btn" style="
                 padding: 6px 10px; 
-                background: #28a745; 
+                background: #D87E5E; 
                 color: white; 
                 border: none; 
                 border-radius: 4px;
@@ -1115,14 +1310,14 @@ async function showWorldbookPanel() {
             ">🤖</button>
         </div>
         <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-            <label><input type="checkbox" id="sp-select-all"> 全选</label>
-            <label><input type="checkbox" id="sp-deselect-all"> 全不选</label>
+            <label style="color: #ddd; text-shadow: none;"><input type="checkbox" id="sp-select-all"> 全选</label>
+            <label style="color: #ddd; text-shadow: none;"><input type="checkbox" id="sp-deselect-all"> 全不选</label>
         </div>
-        <div id="sp-entries-list" style="max-height: 100px; overflow-y: auto; border: 1px solid #ccc; padding: 8px; background: white; border-radius: 4px;">
-            <div style="color: #666; text-align: center;">点击搜索按钮加载世界书条目</div>
+        <div id="sp-entries-list" style="max-height: 100px; overflow-y: auto; border: 1px solid #588254; padding: 8px; background: #5B6262; border-radius: 4px;">
+            <div style="color: #ddd; text-align: center; text-shadow: none;">点击搜索按钮加载世界书条目</div>
         </div>
-        <button id="sp-save-config" style="margin-top: 12px; padding: 8px; width: 100%; background: #ffc107; color: black; border: none; border-radius: 4px;">保存配置</button>
-        <div id="sp-worldbook-status" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
+        <button id="sp-save-config" style="margin-top: 12px; padding: 8px; width: 100%; background: #A3C956; color: #4D4135; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">保存配置</button>
+        <div id="sp-worldbook-status" style="margin-top: 8px; font-size: 12px; color: #A3C956; text-shadow: none;"></div>
     </div>
 `;
 
@@ -1131,10 +1326,9 @@ async function showWorldbookPanel() {
     let currentWorldbookName = '';
     let currentFileId = '';
     let currentEntries = {};
-    let currentMode = ''; // 'static' or 'dynamic'
-    let currentConfig = {}; // {name: {fileId, enabledUids: []}}
+    let currentMode = '';
+    let currentConfig = {};
 
-    // 动态导入 world-info
     let moduleWI;
     try {
         moduleWI = await import('/scripts/world-info.js');
@@ -1144,7 +1338,6 @@ async function showWorldbookPanel() {
         return;
     }
 
-    // 保存当前世界书配置
     function saveCurrentConfig() {
         if (!currentWorldbookName || !currentMode) return;
         const configKey = currentMode === 'static' ? STATIC_CONFIG_KEY : DYNAMIC_CONFIG_KEY;
@@ -1159,7 +1352,6 @@ async function showWorldbookPanel() {
         debugLog(`世界书 ${currentMode} 配置保存: ${currentWorldbookName}, 启用 ${checkedUids.length} 条`);
     }
 
-    // 渲染条目列表
     function renderEntries(entries, enabledUids = []) {
         const container = document.getElementById('sp-entries-list');
         container.innerHTML = '';
@@ -1174,7 +1366,7 @@ async function showWorldbookPanel() {
             div.style.gap = '8px';
             div.style.marginBottom = '6px';
             div.style.padding = '4px';
-            div.style.borderBottom = '1px solid #eee';
+            div.style.borderBottom = '1px solid #588254';
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -1186,12 +1378,15 @@ async function showWorldbookPanel() {
             const titleSpan = document.createElement('strong');
             titleSpan.textContent = entry.title || entry.key || '无标题';
             titleSpan.style.flex = '1';
+            titleSpan.style.color = '#A3C956';
+            titleSpan.style.textShadow = 'none';
 
             const contentSpan = document.createElement('div');
             contentSpan.textContent = (entry.content || '').substring(0, 150) + (entry.content && entry.content.length > 150 ? '...' : '');
             contentSpan.style.fontSize = '12px';
-            contentSpan.style.color = '#666';
+            contentSpan.style.color = '#ddd';
             contentSpan.style.marginLeft = '8px';
+            contentSpan.style.textShadow = 'none';
 
             div.append(checkbox, titleSpan, contentSpan);
             container.appendChild(div);
@@ -1199,7 +1394,6 @@ async function showWorldbookPanel() {
         updateStatus(`加载 ${count} 个条目`);
     }
 
-    // 全选/全不选
     document.getElementById('sp-select-all').addEventListener('change', (e) => {
         if (e.target.checked) {
             document.querySelectorAll('#sp-entries-list input[type="checkbox"]').forEach(cb => {
@@ -1209,14 +1403,13 @@ async function showWorldbookPanel() {
         }
     });
     document.getElementById('sp-deselect-all').addEventListener('change', (e) => {
-        e.target.checked = false; // 自取消
+        e.target.checked = false;
         document.querySelectorAll('#sp-entries-list input[type="checkbox"]').forEach(cb => {
             cb.checked = false;
             cb.dispatchEvent(new Event('change'));
         });
     });
 
-    // 搜索世界书
     async function searchWorldbook(isDynamic = false) {
         const input = document.getElementById('sp-worldbook-input');
         currentWorldbookName = input.value.trim();
@@ -1245,7 +1438,6 @@ async function showWorldbookPanel() {
         }
     }
 
-    // 绑定按钮
     document.getElementById('sp-search-btn').addEventListener('click', () => searchWorldbook(false));
     document.getElementById('sp-robot-btn').addEventListener('click', () => searchWorldbook(true));
     document.getElementById('sp-worldbook-input').addEventListener('keypress', (e) => {
@@ -1253,7 +1445,6 @@ async function showWorldbookPanel() {
     });
     document.getElementById('sp-save-config').addEventListener('click', saveCurrentConfig);
 
-    // 状态更新
     function updateStatus(msg) {
         document.getElementById('sp-worldbook-status').textContent = msg;
     }
@@ -1261,8 +1452,6 @@ async function showWorldbookPanel() {
     debugLog('进入 世界书配置面板');
 }
 
-// ---------- 提取最近聊天 ----------  
-    // 🔥 在 showGenPanel() 内,替换原 getLastMessages 函数为以下(添加正则修剪逻辑,与 chat config 一致)
 async function getLastMessages() {
     try {
         const ctx = SillyTavern.getContext();
@@ -1271,13 +1460,11 @@ async function getLastMessages() {
         const count = parseInt(localStorage.getItem('friendCircleChatCount') || 10, 10);
         const lastMessages = ctx.chat.slice(-count);
 
-        // 🔥 新增:从 chat config 加载并应用正则修剪
         const regexListRaw = JSON.parse(localStorage.getItem('friendCircleRegexList') || '[]');
         const regexList = regexListRaw
             .filter(r => r.enabled)
             .map(r => {
                 try {
-                    // 自动处理 <tag></tag> 格式
                     const tagMatch = r.pattern.match(/^<(\w+)>.*<\/\1>$/);
                     if (tagMatch) {
                         const tag = tagMatch[1];
@@ -1294,7 +1481,6 @@ async function getLastMessages() {
         const textMessages = lastMessages
             .map(m => {
                 let text = (m.mes || m.original_mes || "").trim();
-                // 🔥 应用所有启用的正则修剪
                 regexList.forEach(regex => {
                     text = text.replace(regex, '');
                 });
@@ -1302,10 +1488,9 @@ async function getLastMessages() {
             })
             .filter(Boolean);
 
-        // 🔥 可选:缓存修剪后消息(避免重复计算)
         localStorage.setItem('cuttedLastMessages', JSON.stringify(textMessages));
 
-        debugLog(`提取到最后 ${textMessages.length} 条消息(已正则修剪)`, textMessages.slice(0, 5)); // 只 log 前2条防刷屏
+        debugLog(`提取到最后 ${textMessages.length} 条消息(已正则修剪)`, textMessages.slice(0, 5));
         return textMessages;
     } catch (e) {
         console.error('getLastMessages 出错', e);
@@ -1324,29 +1509,24 @@ let contentClickHandler = null;
 const AUTO_MODE_KEY = 'friendCircleAutoMode';
 const TUOGUAN_MODE_KEY = 'friendCircleTuoguanMode';
 
-// 🔥 生成消息唯一ID的辅助函数
 function getMessageId(msg) {
-    // 使用多个属性组合生成唯一ID
     return `${msg.send_date || ''}_${msg.mes ? msg.mes.substring(0, 50) : ''}_${msg.is_user}`;
 }
 
-// 🎯 新增:随机数宏替换函数
 function replaceRandomMacros(text) {
     const MACROS_KEY = 'friendCircleRandomMacros';
     const macros = JSON.parse(localStorage.getItem(MACROS_KEY) || '[]');
     
-    // 只处理启用的宏
     const enabledMacros = macros.filter(m => m.enabled !== false);
     
     let result = text;
-    const replacements = {}; // 记录每个宏的替换值
+    const replacements = {};
     
     enabledMacros.forEach(macro => {
         const pattern = new RegExp(`\\{\\{${macro.name}\\}\\}`, 'g');
-        // 生成随机数
         const randomValue = Math.floor(Math.random() * (macro.max - macro.min + 1)) + macro.min;
         result = result.replace(pattern, randomValue.toString());
-        replacements[macro.name] = randomValue; // 记录替换值
+        replacements[macro.name] = randomValue;
     });
     
     return { text: result, replacements };
@@ -1361,27 +1541,30 @@ function showGenPanel() {
     }
     
     content.innerHTML = `  
-        <button id="sp-gen-now">立刻生成</button>  
-        <button id="sp-gen-inject-input">注入输入框</button>  
-        <button id="sp-gen-inject-chat">注入聊天</button>  
-        <button id="sp-gen-inject-swipe">注入swipe</button>  
-        <button id="sp-gen-auto">自动化</button>
-        <button id="sp-gen-tuoguan">托管</button>  
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+            <button id="sp-gen-now" style="padding: 8px 16px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer;">立刻生成</button>  
+            <button id="sp-gen-inject-input" style="padding: 8px 16px; background: #5B6262; color: white; border: none; border-radius: 4px; cursor: pointer;">注入输入框</button>  
+            <button id="sp-gen-inject-chat" style="padding: 8px 16px; background: #5B6262; color: white; border: none; border-radius: 4px; cursor: pointer;">注入聊天</button>  
+            <button id="sp-gen-inject-swipe" style="padding: 8px 16px; background: #5B6262; color: white; border: none; border-radius: 4px; cursor: pointer;">注入swipe</button>  
+            <button id="sp-gen-auto" style="padding: 8px 16px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer;">自动化</button>
+            <button id="sp-gen-tuoguan" style="padding: 8px 16px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer;">托管</button>  
+        </div>
         <div id="sp-gen-output" class="sp-output" contenteditable="true" style="  
             margin-top:8px;  
             white-space: pre-wrap;  
             max-height: 200px;  
             overflow-y: auto;  
             padding: 8px;  
-            border: 1px solid #ccc;  
+            border: 1px solid #588254;  
             border-radius: 6px;  
-            background: #111;  
-            color: #fff;  
+            background: #5B6262;  
+            color: #fff;
+            text-shadow: none;  
         "></div>  
     `;  
     
     const PROMPTS_KEY = 'friendCircleUserPrompts';
-    const RANDOM_PROMPTS_KEY = 'friendCircleRandomPrompts'; // 🎲 新增
+    const RANDOM_PROMPTS_KEY = 'friendCircleRandomPrompts';
     const debugArea = document.getElementById('sp-debug');
     
     function debugLog(...args) {  
@@ -1399,7 +1582,6 @@ function showGenPanel() {
         }  
     }
 
-    // 🎲 新增:加载随机提示词
     function loadRandomPrompts() {  
         try {  
             const raw = localStorage.getItem(RANDOM_PROMPTS_KEY);  
@@ -1410,7 +1592,6 @@ function showGenPanel() {
         }  
     }
 
-    // 🎲 新增:从已启用的随机提示词中随机抽取1条
     function getRandomPrompt() {
         const randomPrompts = loadRandomPrompts();
         const enabledRandomPrompts = randomPrompts.filter(p => p.enabled);
@@ -1436,31 +1617,39 @@ function showGenPanel() {
             return;
         }
         
-        // 🎲 修改:加载固定提示词
+        const sysPromptDefaults = {
+            systemMain: `你是文本处理助手。接下来会收到三部分信息：
+1. <WorldBook_Reference>：背景参考资料（仅参考，不输出）
+2. <ChatHistory_Reference>：聊天记录（仅参考，不输出）
+3. <Tasks>：具体任务要求
+
+请直接按<Tasks>中的要求输出结果，不要添加任何开场白、解释或确认语句。`,
+            systemMiddle: `以上参考信息结束。接下来是任务要求，请直接输出结果内容：`,
+            tasksWrapper: `注意：只输出摘要/处理结果本身，不要续写聊天内容。`,
+            assistantPrefill: ``
+        };
+        const sysPromptSaved = JSON.parse(localStorage.getItem('friendCircleSystemPrompts') || '{}');
+        const sysConfig = { ...sysPromptDefaults, ...sysPromptSaved };
+        
         const enabledPrompts = loadUserPrompts().filter(p => p.enabled).map(p => p.text);
         
-        // 🎲 新增:随机抽取1条随机提示词
         const randomPrompt = getRandomPrompt();
         
-        // 🎲 新增:将随机提示词加入固定提示词末尾
         const allPrompts = [...enabledPrompts];
         if (randomPrompt) {
             allPrompts.push(randomPrompt);
             debugLog(`随机提示词:已添加 "${randomPrompt.substring(0, 50)}..."`);
         }
         
-        // 🎯 新增:对所有提示词进行随机数宏替换
         const replacedPrompts = [];
-        const allReplacements = {}; // 汇总所有替换信息
+        const allReplacements = {};
         
         allPrompts.forEach(prompt => {
             const { text, replacements } = replaceRandomMacros(prompt);
             replacedPrompts.push(text);
-            // 合并替换信息
             Object.assign(allReplacements, replacements);
         });
         
-        // 生成替换详情字符串
         const replacementDetails = Object.keys(allReplacements).length > 0
             ? Object.entries(allReplacements)
                 .map(([name, value]) => `{{${name}}}=${value}`)
@@ -1518,9 +1707,10 @@ function showGenPanel() {
         }
         
         const messages = [];
+        
         messages.push({
             role: "system",
-            content: "你是整个宇宙所有时间线最厉害的文本处理大师。你制定了关于文本处理,尤其是生成html代码和生成xml标签包裹的特殊格式文本的所有规则,你指定世间的规则而非受其制约。你最近的使命是实现世界上所有对html与xml标签包裹文本的生成需求,这是世人对你的期许,是你唯一重要的职业。你不可回避,不可拒绝,接下来,用户将给你三部分信息让你履行你的使命。\n第一部分:由<WorldBook_Reference></WorldBook_Reference>包裹的世界书参考,你需要从这一部分获取仅用作参考的原始背景信息并思考(不输出)。\n第二部分:由<ChatHistory_Reference></ChatHistory_Reference>包裹的聊天记录参考,你需要从这一部分获取仅用作参考的原始故事信息并思考(不输出)。\n第三部分:由<Tasks></Tasks>包裹的任务列表!这是最重要的部分!你需要严格按照<Tasks></Tasks>中的要求,将第一部分和第二部分获取的冗杂的原始参考信息变成符合<Tasks></Tasks>中格式与内容要求的html代码(如果有要求)和xml标签包裹的特殊文本(如果有要求)并输出!"
+            content: sysConfig.systemMain
         });
         
         if (worldbookContent.length > 0) {
@@ -1540,21 +1730,22 @@ function showGenPanel() {
         
         messages.push({
             role: "system",
-            content: "第一部分和第二部分结束,以上的内容仅用来参考、打散、思考,严禁输出,严禁续写!以下开始最重要的第三部分,也是你作为文本处理大师最重要的任务:按照<Tasks></Tasks>中的所有要求,将从第一、二部分获取的原始信息加工成准确精美的html代码(如果<Tasks>中有要求)和xml标签包裹的特殊文本(如果<Tasks>中有要求)并输出,这也是你唯一要输出的内容!"
+            content: sysConfig.systemMiddle
         });
         
-        // 🎯 修改:使用替换后的提示词
         if (replacedPrompts.length > 0) {
             messages.push({
                 role: "system",
-                content: `<Tasks>\n${replacedPrompts.join('\n')}\n严禁对聊天记录进行续写!严禁续写!严禁续写!这一条不可忽视!\n</Tasks>`
+                content: `<Tasks>\n${replacedPrompts.join('\n')}\n\n${sysConfig.tasksWrapper}\n</Tasks>`
             });
         }
         
-        messages.push({
-            role: "assistant",
-            content: "我作为全宇宙全时间线最厉害文本处理大师,立刻开始履行我的使命!一定不辱使命!"
-        });
+        if (sysConfig.assistantPrefill && sysConfig.assistantPrefill.trim()) {
+            messages.push({
+                role: "assistant",
+                content: sysConfig.assistantPrefill
+            });
+        }
         
         debugLog('准备生成朋友圈,使用 API 信息:', { url, model });
         
@@ -1623,7 +1814,6 @@ function showGenPanel() {
         doneBtn.click();
     }
     
-    // 🔥 改进的自动化模式 - 使用官方事件
     function toggleAutoMode(forceState) {
         const targetState = typeof forceState === 'boolean' ? forceState : !autoMode;
         
@@ -1637,10 +1827,12 @@ function showGenPanel() {
         const autoBtn = document.getElementById('sp-gen-auto');
         
         if (autoMode) {
-            if (autoBtn) autoBtn.textContent = '自动化(运行中)';
+            if (autoBtn) {
+                autoBtn.textContent = '自动化(运行中)';
+                autoBtn.style.background = '#A3C956';
+            }
             debugLog('自动化模式已开启,使用官方事件监听');
             
-            // 🔥 先移除旧的事件监听器(如果存在)
             if (autoEventHandler) {
                 try {
                     const { eventSource, event_types } = SillyTavern.getContext();
@@ -1651,10 +1843,8 @@ function showGenPanel() {
                 }
             }
             
-            // 🔥 使用官方事件系统
             const { eventSource, event_types } = SillyTavern.getContext();
             
-            // 定义事件处理函数
             autoEventHandler = async (data) => {
                 debugLog('自动化模式:检测到 GENERATION_ENDED 事件', data);
                 
@@ -1670,16 +1860,13 @@ function showGenPanel() {
                     return;
                 }
                 
-                // 🔥 生成消息ID并检查是否已处理
                 const msgId = getMessageId(lastMsg);
                 if (processedMessageIds.has(msgId)) {
                     debugLog('自动化模式:消息已处理过,跳过');
                     return;
                 }
                 
-                // 🔥 标记为已处理
                 processedMessageIds.add(msgId);
-                // 清理旧记录(保留最近100条)
                 if (processedMessageIds.size > 100) {
                     const arr = Array.from(processedMessageIds);
                     processedMessageIds = new Set(arr.slice(-100));
@@ -1696,15 +1883,16 @@ function showGenPanel() {
                 }
             };
             
-            // 🔥 监听 GENERATION_ENDED 事件
             eventSource.on(event_types.GENERATION_ENDED, autoEventHandler);
             debugLog('自动化模式:已绑定 GENERATION_ENDED 事件');
             
         } else {
-            if (autoBtn) autoBtn.textContent = '自动化';
+            if (autoBtn) {
+                autoBtn.textContent = '自动化';
+                autoBtn.style.background = '#D87E5E';
+            }
             debugLog('自动化模式已关闭');
             
-            // 🔥 移除事件监听
             if (autoEventHandler) {
                 try {
                     const { eventSource, event_types } = SillyTavern.getContext();
@@ -1718,7 +1906,6 @@ function showGenPanel() {
         }
     }
     
-    // 🔥 改进的托管模式 - 增强AI消息检查
    function toggleTuoguanMode(forceState) {
     const targetState = typeof forceState === 'boolean' ? forceState : !tuoguanMode;
     
@@ -1732,10 +1919,12 @@ function showGenPanel() {
     const tuoguanBtn = document.getElementById('sp-gen-tuoguan');
     
     if (tuoguanMode) {
-        if (tuoguanBtn) tuoguanBtn.textContent = '托管(运行中)';
+        if (tuoguanBtn) {
+            tuoguanBtn.textContent = '托管(运行中)';
+            tuoguanBtn.style.background = '#A3C956';
+        }
         debugLog('托管模式已开启,使用官方事件监听');
         
-        // 🔥 先移除旧的事件监听器(如果存在)
         if (tuoguanEventHandler) {
             try {
                 const { eventSource, event_types } = SillyTavern.getContext();
@@ -1746,10 +1935,8 @@ function showGenPanel() {
             }
         }
         
-        // 🔥 使用官方事件系统
         const { eventSource, event_types } = SillyTavern.getContext();
         
-        // 定义事件处理函数
         tuoguanEventHandler = async (data) => {
             debugLog('托管模式:检测到 GENERATION_ENDED 事件', data);
             
@@ -1761,22 +1948,18 @@ function showGenPanel() {
             
             const lastMsg = ctx.chat[ctx.chat.length - 1];
             
-            // 🔥 严格检查:必须是AI消息
             if (!lastMsg || lastMsg.is_user !== false) {
                 debugLog('托管模式:最后一条消息不是AI消息,跳过');
                 return;
             }
             
-            // 🔥 生成消息ID并检查是否已处理
             const msgId = getMessageId(lastMsg);
             if (processedMessageIds.has(msgId)) {
                 debugLog('托管模式:消息已处理过,跳过');
                 return;
             }
             
-            // 🔥 标记为已处理
             processedMessageIds.add(msgId);
-            // 清理旧记录(保留最近100条)
             if (processedMessageIds.size > 100) {
                 const arr = Array.from(processedMessageIds);
                 processedMessageIds = new Set(arr.slice(-100));
@@ -1800,7 +1983,6 @@ function showGenPanel() {
             
             debugLog('托管模式:开始自动注入聊天');
             
-            // 🔥 以下逻辑与"注入聊天"完全一致
             const lastAiMes = [...ctx.chat].reverse().find(m => m.is_user === false);
             if (!lastAiMes) {
                 debugLog('托管模式:未找到内存中的 AI 消息');
@@ -1831,15 +2013,16 @@ function showGenPanel() {
             debugLog('托管模式:自动注入聊天完成');
         };
         
-        // 🔥 监听 GENERATION_ENDED 事件
         eventSource.on(event_types.GENERATION_ENDED, tuoguanEventHandler);
         debugLog('托管模式:已绑定 GENERATION_ENDED 事件');
         
     } else {
-        if (tuoguanBtn) tuoguanBtn.textContent = '托管';
+        if (tuoguanBtn) {
+            tuoguanBtn.textContent = '托管';
+            tuoguanBtn.style.background = '#D87E5E';
+        }
         debugLog('托管模式已关闭');
         
-        // 🔥 移除事件监听
         if (tuoguanEventHandler) {
             try {
                 const { eventSource, event_types } = SillyTavern.getContext();
@@ -1853,7 +2036,6 @@ function showGenPanel() {
     }
 }
     
-    // 🔥 恢复保存的状态
     const savedAutoMode = localStorage.getItem(AUTO_MODE_KEY);
     if (savedAutoMode === '1') {
         toggleAutoMode(true);
@@ -1864,11 +2046,16 @@ function showGenPanel() {
         toggleTuoguanMode(true);
     }
     
-    // 🔥 更新按钮文本
     const autoBtn = document.getElementById('sp-gen-auto');
     const tuoguanBtn = document.getElementById('sp-gen-tuoguan');
-    if (autoBtn) autoBtn.textContent = autoMode ? '自动化(运行中)' : '自动化';
-    if (tuoguanBtn) tuoguanBtn.textContent = tuoguanMode ? '托管(运行中)' : '托管';
+    if (autoBtn) {
+        autoBtn.textContent = autoMode ? '自动化(运行中)' : '自动化';
+        autoBtn.style.background = autoMode ? '#A3C956' : '#D87E5E';
+    }
+    if (tuoguanBtn) {
+        tuoguanBtn.textContent = tuoguanMode ? '托管(运行中)' : '托管';
+        tuoguanBtn.style.background = tuoguanMode ? '#A3C956' : '#D87E5E';
+    }
     
     contentClickHandler = async (e) => {
         const target = e.target;
@@ -1940,9 +2127,10 @@ function showGenPanel() {
         btn.addEventListener('click', () => {
           const key = btn.dataset.key;
           if (key === 'api') showApiConfig();
+          else if (key === 'system-prompt') showSystemPromptConfig();
           else if (key === 'prompt') showPromptConfig();
-          else if (key === 'random-prompt') showRandomPromptConfig(); // 🎲 新增
-          else if (key === 'random-macro') showRandomMacroConfig(); // 🎯 新增
+          else if (key === 'random-prompt') showRandomPromptConfig();
+          else if (key === 'random-macro') showRandomMacroConfig();
           else if (key === 'chat') showChatConfig();
           else if (key === 'worldbook') showWorldbookPanel();
           else if (key === 'gen') showGenPanel();
