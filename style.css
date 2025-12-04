@@ -9,9 +9,11 @@
 
 #star-panel {
   position: fixed;
-  top: 60px;
-  right: 20px;
-  width: 320px;
+  top: 10px;
+  right: 10px;
+  width: 340px;
+  max-width: calc(100vw - 20px);
+  max-height: 85vh;
   background: #1e1e2e;
   color: #fff;
   border: 1px solid #444;
@@ -19,19 +21,58 @@
   padding: 10px;
   display: none;
   z-index: 9999;
+  box-sizing: border-box;
+  
+  /* 关键：使用flex布局 */
+  display: none;
+  flex-direction: column;
 }
 
-.sp-header {
+#star-panel.sp-visible {
+  display: flex !important;
+}
+
+/* 面板头部 - 固定 */
+.sp-panel-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #444;
+  margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
+.sp-header-title {
+  font-size: 14px;
+  color: #A3C956;
+}
+
+.sp-header-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.sp-header-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+}
+
+.sp-header-btn:hover {
+  color: #A3C956;
+}
+
+/* 按钮网格 - 固定 */
 .sp-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 6px;
   margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .sp-btn {
@@ -40,26 +81,35 @@
   border-radius: 6px;
   cursor: pointer;
   text-align: center;
+  font-size: inherit;
 }
 .sp-btn:hover {
   background: #555;
 }
 
+/* 内容区域 - 可滚动 */
 .sp-subpanel {
   background: #222;
   padding: 8px;
   border-radius: 6px;
-  min-height: 120px;
+  min-height: 100px;
   margin-bottom: 10px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* iOS滚动优化 */
 }
 
+/* 调试面板 - 固定高度 */
 .sp-debug {
-  height: 80px;
+  height: 60px;
+  min-height: 60px;
   background: #111;
   border: 1px solid #333;
   padding: 5px;
   font-size: 12px;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .sp-output {
@@ -68,4 +118,149 @@
   padding: 5px;
   min-height: 60px;
   border: 1px solid #333;
+}
+
+/* 设置面板 */
+.sp-settings-panel {
+  background: #2a2a3e;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.sp-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sp-settings-label {
+  color: #ddd;
+  font-size: 13px;
+}
+
+.sp-settings-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sp-slider {
+  width: 100px;
+  cursor: pointer;
+}
+
+.sp-slider-value {
+  color: #A3C956;
+  min-width: 40px;
+  text-align: center;
+}
+
+/* ========== 手机响应式适配 ========== */
+@media (max-width: 480px) {
+  #star-panel {
+    left: 5px;
+    right: 5px;
+    top: 5px;
+    width: auto;
+    max-width: none;
+    max-height: 90vh;
+  }
+  
+  .sp-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+  }
+  
+  .sp-btn {
+    padding: 8px 4px;
+    font-size: 12px;
+    word-break: break-all;
+  }
+  
+  .sp-subpanel {
+    min-height: 150px;
+  }
+  
+  .sp-debug {
+    height: 50px;
+    min-height: 50px;
+  }
+}
+
+/* 小屏幕优化 */
+@media (max-width: 360px) {
+  #star-panel {
+    padding: 6px;
+  }
+  
+  .sp-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3px;
+  }
+  
+  .sp-btn {
+    padding: 6px 2px;
+    font-size: 11px;
+  }
+}
+
+/* 缩放等级样式 */
+.sp-scale-small {
+  font-size: 12px !important;
+}
+.sp-scale-small .sp-btn {
+  padding: 4px !important;
+}
+.sp-scale-small .sp-subpanel {
+  padding: 6px !important;
+}
+
+.sp-scale-normal {
+  font-size: 14px !important;
+}
+
+.sp-scale-large {
+  font-size: 16px !important;
+}
+.sp-scale-large .sp-btn {
+  padding: 8px !important;
+}
+
+.sp-scale-xlarge {
+  font-size: 18px !important;
+}
+.sp-scale-xlarge .sp-btn {
+  padding: 10px !important;
+}
+
+/* 优化textarea在手机上的显示 */
+.sp-subpanel textarea {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  font-size: inherit !important;
+}
+
+.sp-subpanel input[type="text"],
+.sp-subpanel input[type="number"] {
+  font-size: inherit !important;
+}
+
+/* 关闭按钮样式 */
+.sp-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.sp-close-btn:hover {
+  color: #fff;
 }
