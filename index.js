@@ -2,7 +2,7 @@ import { extension_settings, getContext } from "../../../extensions.js";
 import { saveSettingsDebounced, saveChat } from "../../../../script.js";
 
 (function () {
-  const MODULE_NAME = 'pyq-creator';
+  const MODULE_NAME = '外置生成魔改版';
 
   function ready(fn) {
     if (window.SillyTavern && SillyTavern.getContext) return fn();
