@@ -2,7 +2,7 @@ import { extension_settings, getContext } from "../../../extensions.js";
 import { saveSettingsDebounced, saveChat } from "../../../../script.js";
 
 (function () {
-  const MODULE_NAME = '外置生成魔改版';
+  const MODULE_NAME = 'pyq-creator';
 
   function ready(fn) {
     if (window.SillyTavern && SillyTavern.getContext) return fn();
@@ -33,7 +33,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
       // 🌟按钮
       const fab = document.createElement('div');
       fab.id = 'star-fab';
-      fab.title = MODULE_NAME;
+      fab.title = MODULE_NAME + ' (双击重置设置)';
       fab.innerText = '🌟';
       fab.style.cssText = `
         position: fixed;
@@ -57,7 +57,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         fab.style.right = savedRight;
       } else {
         fab.style.top = (window.innerHeight / 2 - 16) + 'px';
-        fab.style.right = (window.innerWidth / 2 - 16) + 'px';
+        fab.style.right = '10px';
       }
       document.body.appendChild(fab);
 
@@ -139,19 +139,38 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
       `;
       document.body.appendChild(panel);
 
-      // 应用保存的面板尺寸
-      const savedHeight = localStorage.getItem('starPanelHeight');
-      const savedWidth = localStorage.getItem('starPanelWidth');
-      if (savedHeight) panel.style.maxHeight = savedHeight + 'vh';
-      if (savedWidth) panel.style.width = savedWidth + 'px';
+      // 应用保存的面板尺寸（带安全检查）
+      function applySavedPanelSize() {
+        const savedHeight = localStorage.getItem('starPanelHeight');
+        const savedWidth = localStorage.getItem('starPanelWidth');
+        const maxWidth = window.innerWidth - 20;
+        
+        if (savedHeight) {
+          panel.style.maxHeight = savedHeight + 'vh';
+        }
+        if (savedWidth) {
+          const width = Math.min(parseInt(savedWidth), maxWidth);
+          panel.style.width = width + 'px';
+        }
+      }
+      applySavedPanelSize();
 
-      // 默认打开生成面板
+      // 窗口大小变化时重新检查
+      window.addEventListener('resize', () => {
+        const maxWidth = window.innerWidth - 20;
+        const currentWidth = parseInt(panel.style.width) || 340;
+        if (currentWidth > maxWidth) {
+          panel.style.width = maxWidth + 'px';
+          localStorage.setItem('starPanelWidth', maxWidth);
+        }
+      });
+
       setTimeout(() => {
         const genBtn = panel.querySelector('.sp-btn[data-key="gen"]');
         if (genBtn) genBtn.click();
       }, 0);
 
-      // 面板显示/隐藏
+      // 单击显示/隐藏面板
       fab.addEventListener('click', () => {
         if (panel.classList.contains('sp-visible')) {
           panel.classList.remove('sp-visible');
@@ -159,6 +178,21 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         } else {
           panel.classList.add('sp-visible');
           panel.style.display = 'flex';
+        }
+      });
+
+      // 双击重置设置
+      fab.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (confirm('双击检测到！是否重置界面设置？\n（解决面板显示异常问题）')) {
+          localStorage.removeItem('starPanelScale');
+          localStorage.removeItem('starPanelHeight');
+          localStorage.removeItem('starPanelWidth');
+          panel.className = 'sp-scale-normal';
+          panel.style.maxHeight = '85vh';
+          panel.style.width = '340px';
+          alert('界面设置已重置！');
         }
       });
 
@@ -183,6 +217,8 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
       function showSettingsPanel() {
         const content = document.getElementById('sp-content-area');
         const currentScale = localStorage.getItem('starPanelScale') || 'normal';
+        const maxWidth = Math.min(500, window.innerWidth - 20);
+        const currentWidth = Math.min(parseInt(localStorage.getItem('starPanelWidth') || '340'), maxWidth);
         
         content.innerHTML = `
         <div style="padding: 12px; background: #2a2a3e; border-radius: 8px;">
@@ -190,7 +226,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           
           <div style="margin-bottom: 12px;">
             <span style="color: #ddd;">界面缩放：</span>
-            <select id="sp-scale-select" style="padding: 6px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254;">
+            <select id="sp-scale-select" style="padding: 6px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; width: 100%; margin-top: 4px; box-sizing: border-box;">
               <option value="small" ${currentScale === 'small' ? 'selected' : ''}>小</option>
               <option value="normal" ${currentScale === 'normal' ? 'selected' : ''}>标准</option>
               <option value="large" ${currentScale === 'large' ? 'selected' : ''}>大</option>
@@ -198,19 +234,27 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             </select>
           </div>
           
-          <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <div style="margin-bottom: 12px;">
             <span style="color: #ddd;">面板高度：</span>
-            <input type="range" id="sp-height-slider" min="50" max="95" value="${parseInt(localStorage.getItem('starPanelHeight') || '85')}" style="flex: 1; min-width: 80px;">
-            <span id="sp-height-value" style="color: #A3C956;">${localStorage.getItem('starPanelHeight') || '85'}%</span>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+              <input type="range" id="sp-height-slider" min="50" max="95" value="${parseInt(localStorage.getItem('starPanelHeight') || '85')}" style="flex: 1;">
+              <span id="sp-height-value" style="color: #A3C956; min-width: 45px;">${localStorage.getItem('starPanelHeight') || '85'}%</span>
+            </div>
           </div>
           
-          <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span style="color: #ddd;">面板宽度：</span>
-            <input type="range" id="sp-width-slider" min="280" max="500" value="${parseInt(localStorage.getItem('starPanelWidth') || '340')}" style="flex: 1; min-width: 80px;">
-            <span id="sp-width-value" style="color: #A3C956;">${localStorage.getItem('starPanelWidth') || '340'}px</span>
+          <div style="margin-bottom: 12px;">
+            <span style="color: #ddd;">面板宽度：<span style="font-size:11px;color:#888;">(最大${maxWidth}px)</span></span>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+              <input type="range" id="sp-width-slider" min="260" max="${maxWidth}" value="${currentWidth}" style="flex: 1;">
+              <span id="sp-width-value" style="color: #A3C956; min-width: 50px;">${currentWidth}px</span>
+            </div>
           </div>
           
-          <button id="sp-reset-settings" style="width: 100%; padding: 10px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer;">恢复默认设置</button>
+          <button id="sp-reset-settings" style="width: 100%; padding: 10px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px;">恢复默认设置</button>
+          
+          <p style="color: #888; font-size: 11px; margin-top: 12px;">
+            💡 双击星星按钮也可以重置设置
+          </p>
         </div>
         `;
         
@@ -275,7 +319,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         `;
 
         const modelSelect = document.getElementById("api-model-select");
-        const debugArea = document.getElementById("api-debug");
 
         document.getElementById("api-url-input").value = localStorage.getItem("independentApiUrl") || "";
         document.getElementById("api-key-input").value = localStorage.getItem("independentApiKey") || "";
@@ -465,7 +508,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           const container = document.getElementById('sp-prompt-list');
           container.innerHTML = '';
           friendCirclePrompts.forEach((p, idx) => {
-            if (promptTagFilter && !p.tags.some(tag => tag.toLowerCase().includes(promptTagFilter))) return;
+            if (promptTagFilter && !(p.tags || []).some(tag => tag.toLowerCase().includes(promptTagFilter))) return;
             const div = document.createElement('div');
             div.style.cssText = 'margin-bottom:8px;border-bottom:1px solid #588254;padding-bottom:6px;';
             const row = document.createElement('div');
@@ -742,8 +785,9 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           </div>
           <div style="margin-bottom:12px;">
             <h4 style="color: #D87E5E;">正则修剪列表</h4>
+            <p style="color:#aaa;font-size:11px;margin-bottom:8px;">支持输入：标签名(如 example) 或 完整格式(如 &lt;think&gt;&lt;/think&gt;)</p>
             <div style="display:flex; gap:6px; margin-bottom:6px; flex-wrap: wrap;">
-              <input type="text" id="sp-new-regex" placeholder="<example></example>" style="flex:1; min-width: 150px; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; box-sizing: border-box;">
+              <input type="text" id="sp-new-regex" placeholder="example 或 <think></think>" style="flex:1; min-width: 150px; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; box-sizing: border-box;">
               <button id="sp-add-regex" style="padding: 8px 12px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer;">添加</button>
             </div>
             <div id="sp-regex-list" style="max-height:150px; overflow-y:auto; border:1px solid #588254; padding:6px; border-radius:6px; background: #5B6262;"></div>
@@ -909,26 +953,48 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         document.getElementById('sp-save-config').addEventListener('click', saveCurrentConfig);
       }
 
-      // ========== 获取聊天记录 ==========
+      // ========== 获取聊天记录（修复正则匹配）==========
       async function getLastMessages() {
         try {
           const ctx = SillyTavern.getContext();
           if (!ctx || !Array.isArray(ctx.chat)) return [];
           const count = parseInt(localStorage.getItem('friendCircleChatCount') || 10, 10);
           const lastMessages = ctx.chat.slice(-count);
+          
           const regexListRaw = JSON.parse(localStorage.getItem('friendCircleRegexList') || '[]');
-          const regexList = regexListRaw.filter(r => r.enabled).map(r => {
-            try {
-              const tagMatch = r.pattern.match(/^<(\w+)>.*<\/\1>$/);
-              if (tagMatch) return new RegExp(`<${tagMatch[1]}>[\\s\\S]*?<\\/${tagMatch[1]}>`, 'g');
-              return new RegExp(r.pattern, 'g');
-            } catch { return null; }
-          }).filter(Boolean);
+          const regexList = regexListRaw
+            .filter(r => r.enabled)
+            .map(r => {
+              try {
+                const pattern = r.pattern.trim();
+                
+                // 格式1: 只输入标签名，如 "example" 或 "think"
+                if (/^\w+$/.test(pattern)) {
+                  return new RegExp(`<${pattern}>[\\s\\S]*?<\\/${pattern}>`, 'g');
+                }
+                
+                // 格式2: 输入 <tag></tag> 或 <tag>...</tag>
+                const openTag = pattern.match(/^<(\w+)>/);
+                const closeTag = pattern.match(/<\/(\w+)>$/);
+                if (openTag && closeTag && openTag[1] === closeTag[1]) {
+                  return new RegExp(`<${openTag[1]}>[\\s\\S]*?<\\/${openTag[1]}>`, 'g');
+                }
+                
+                // 格式3: 直接输入完整正则表达式
+                return new RegExp(pattern, 'g');
+              } catch (e) {
+                console.warn('[正则修剪] 无效:', r.pattern);
+                return null;
+              }
+            })
+            .filter(Boolean);
+          
           const textMessages = lastMessages.map(m => {
             let text = (m.mes || m.original_mes || "").trim();
             regexList.forEach(regex => { text = text.replace(regex, ''); });
             return text;
           }).filter(Boolean);
+          
           localStorage.setItem('cuttedLastMessages', JSON.stringify(textMessages));
           return textMessages;
         } catch (e) { return []; }
