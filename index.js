@@ -2,7 +2,7 @@ import { extension_settings, getContext } from "../../../extensions.js";
 import { saveSettingsDebounced, saveChat } from "../../../../script.js";
 
 (function () {
-  const MODULE_NAME = 'pyq-creator';
+  const MODULE_NAME = '外置生成器';
 
   function ready(fn) {
     if (window.SillyTavern && SillyTavern.getContext) return fn();
@@ -29,6 +29,10 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
       }
 
       if (document.getElementById('star-fab')) return;
+
+      function isMobile() {
+        return window.innerWidth <= 480;
+      }
 
       // 🌟按钮
       const fab = document.createElement('div');
@@ -139,29 +143,36 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
       `;
       document.body.appendChild(panel);
 
-      // 应用保存的面板尺寸（带安全检查）
+      // 应用保存的面板尺寸
       function applySavedPanelSize() {
         const savedHeight = localStorage.getItem('starPanelHeight');
         const savedWidth = localStorage.getItem('starPanelWidth');
-        const maxWidth = window.innerWidth - 20;
+        const fullWidthMode = localStorage.getItem('starPanelFullWidth') === '1';
         
         if (savedHeight) {
           panel.style.maxHeight = savedHeight + 'vh';
         }
-        if (savedWidth) {
-          const width = Math.min(parseInt(savedWidth), maxWidth);
-          panel.style.width = width + 'px';
+        
+        if (fullWidthMode) {
+          panel.classList.add('sp-fullwidth');
+        } else {
+          panel.classList.remove('sp-fullwidth');
+          if (savedWidth) {
+            const maxWidth = window.innerWidth - 20;
+            const width = Math.min(parseInt(savedWidth), maxWidth);
+            panel.style.width = width + 'px';
+          }
         }
       }
       applySavedPanelSize();
 
-      // 窗口大小变化时重新检查
       window.addEventListener('resize', () => {
-        const maxWidth = window.innerWidth - 20;
-        const currentWidth = parseInt(panel.style.width) || 340;
-        if (currentWidth > maxWidth) {
-          panel.style.width = maxWidth + 'px';
-          localStorage.setItem('starPanelWidth', maxWidth);
+        if (localStorage.getItem('starPanelFullWidth') !== '1') {
+          const maxWidth = window.innerWidth - 20;
+          const currentWidth = parseInt(panel.style.width) || 340;
+          if (currentWidth > maxWidth) {
+            panel.style.width = maxWidth + 'px';
+          }
         }
       });
 
@@ -170,7 +181,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         if (genBtn) genBtn.click();
       }, 0);
 
-      // 单击显示/隐藏面板
       fab.addEventListener('click', () => {
         if (panel.classList.contains('sp-visible')) {
           panel.classList.remove('sp-visible');
@@ -181,15 +191,16 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         }
       });
 
-      // 双击重置设置
       fab.addEventListener('dblclick', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (confirm('双击检测到！是否重置界面设置？\n（解决面板显示异常问题）')) {
+        if (confirm('双击检测到！是否重置界面设置？')) {
           localStorage.removeItem('starPanelScale');
           localStorage.removeItem('starPanelHeight');
           localStorage.removeItem('starPanelWidth');
+          localStorage.removeItem('starPanelFullWidth');
           panel.className = 'sp-scale-normal';
+          panel.classList.remove('sp-fullwidth');
           panel.style.maxHeight = '85vh';
           panel.style.width = '340px';
           alert('界面设置已重置！');
@@ -219,6 +230,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         const currentScale = localStorage.getItem('starPanelScale') || 'normal';
         const maxWidth = Math.min(500, window.innerWidth - 20);
         const currentWidth = Math.min(parseInt(localStorage.getItem('starPanelWidth') || '340'), maxWidth);
+        const fullWidthMode = localStorage.getItem('starPanelFullWidth') === '1';
         
         content.innerHTML = `
         <div style="padding: 12px; background: #2a2a3e; border-radius: 8px;">
@@ -242,8 +254,15 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             </div>
           </div>
           
-          <div style="margin-bottom: 12px;">
-            <span style="color: #ddd;">面板宽度：<span style="font-size:11px;color:#888;">(最大${maxWidth}px)</span></span>
+          <div style="margin-bottom: 12px; padding: 10px; background: #3a3a4e; border-radius: 6px;">
+            <label style="display: flex; align-items: center; gap: 8px; color: #ddd; cursor: pointer;">
+              <input type="checkbox" id="sp-fullwidth-toggle" ${fullWidthMode ? 'checked' : ''} style="width: 18px; height: 18px;">
+              <span>📱 全屏宽度模式</span>
+            </label>
+          </div>
+          
+          <div id="sp-width-container" style="margin-bottom: 12px; ${fullWidthMode ? 'opacity: 0.5; pointer-events: none;' : ''}">
+            <span style="color: #ddd;">面板宽度：</span>
             <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
               <input type="range" id="sp-width-slider" min="260" max="${maxWidth}" value="${currentWidth}" style="flex: 1;">
               <span id="sp-width-value" style="color: #A3C956; min-width: 50px;">${currentWidth}px</span>
@@ -251,10 +270,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           </div>
           
           <button id="sp-reset-settings" style="width: 100%; padding: 10px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px;">恢复默认设置</button>
-          
-          <p style="color: #888; font-size: 11px; margin-top: 12px;">
-            💡 双击星星按钮也可以重置设置
-          </p>
         </div>
         `;
         
@@ -263,6 +278,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           localStorage.setItem('starPanelScale', scale);
           panel.className = `sp-scale-${scale}`;
           if (panel.classList.contains('sp-visible')) panel.classList.add('sp-visible');
+          if (localStorage.getItem('starPanelFullWidth') === '1') panel.classList.add('sp-fullwidth');
         });
         
         document.getElementById('sp-height-slider').addEventListener('input', (e) => {
@@ -272,18 +288,40 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           panel.style.maxHeight = height + 'vh';
         });
         
+        document.getElementById('sp-fullwidth-toggle').addEventListener('change', (e) => {
+          const fullWidth = e.target.checked;
+          localStorage.setItem('starPanelFullWidth', fullWidth ? '1' : '0');
+          const widthContainer = document.getElementById('sp-width-container');
+          
+          if (fullWidth) {
+            panel.classList.add('sp-fullwidth');
+            widthContainer.style.opacity = '0.5';
+            widthContainer.style.pointerEvents = 'none';
+          } else {
+            panel.classList.remove('sp-fullwidth');
+            widthContainer.style.opacity = '1';
+            widthContainer.style.pointerEvents = 'auto';
+            const savedWidth = localStorage.getItem('starPanelWidth') || '340';
+            panel.style.width = savedWidth + 'px';
+          }
+        });
+        
         document.getElementById('sp-width-slider').addEventListener('input', (e) => {
           const width = e.target.value;
           document.getElementById('sp-width-value').textContent = width + 'px';
           localStorage.setItem('starPanelWidth', width);
-          panel.style.width = width + 'px';
+          if (localStorage.getItem('starPanelFullWidth') !== '1') {
+            panel.style.width = width + 'px';
+          }
         });
         
         document.getElementById('sp-reset-settings').addEventListener('click', () => {
           localStorage.removeItem('starPanelScale');
           localStorage.removeItem('starPanelHeight');
           localStorage.removeItem('starPanelWidth');
+          localStorage.removeItem('starPanelFullWidth');
           panel.className = 'sp-scale-normal sp-visible';
+          panel.classList.remove('sp-fullwidth');
           panel.style.maxHeight = '85vh';
           panel.style.width = '340px';
           showSettingsPanel();
@@ -314,12 +352,10 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               <button id="api-refresh-models-btn" style="flex: 1; min-width: 80px; padding: 8px; background: #5B6262; color: white; border: none; border-radius: 4px; cursor: pointer;">刷新模型</button>
             </div>
             <div id="api-status" style="margin-top:8px;font-size:12px;color:#A3C956;"></div>
-            <pre id="api-debug" style="margin-top:8px;font-size:11px;color:#ddd;white-space:pre-wrap;background:#5B6262;padding:8px;border-radius:4px;max-height:80px;overflow-y:auto;"></pre>
           </div>
         `;
 
         const modelSelect = document.getElementById("api-model-select");
-
         document.getElementById("api-url-input").value = localStorage.getItem("independentApiUrl") || "";
         document.getElementById("api-key-input").value = localStorage.getItem("independentApiKey") || "";
         const savedModel = localStorage.getItem("independentApiModel");
@@ -380,10 +416,9 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           const key = document.getElementById("api-key-input").value || localStorage.getItem("independentApiKey");
           const model = modelSelect.value || localStorage.getItem("independentApiModel");
           if (!urlRaw || !key || !model) return alert("请完整填写API信息");
-          const baseUrl = urlRaw.replace(/\/$/, "");
           document.getElementById("api-status").textContent = "正在测试...";
           try {
-            const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+            const res = await fetch(`${urlRaw.replace(/\/$/, "")}/v1/chat/completions`, {
               method: "POST",
               headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
               body: JSON.stringify({ model, messages: [{ role: "user", content: "ping" }], max_tokens: 100 })
@@ -785,9 +820,9 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           </div>
           <div style="margin-bottom:12px;">
             <h4 style="color: #D87E5E;">正则修剪列表</h4>
-            <p style="color:#aaa;font-size:11px;margin-bottom:8px;">支持输入：标签名(如 example) 或 完整格式(如 &lt;think&gt;&lt;/think&gt;)</p>
+            <p style="color:#aaa;font-size:11px;margin-bottom:8px;">支持：标签名(example) 或 完整格式</p>
             <div style="display:flex; gap:6px; margin-bottom:6px; flex-wrap: wrap;">
-              <input type="text" id="sp-new-regex" placeholder="example 或 <think></think>" style="flex:1; min-width: 150px; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; box-sizing: border-box;">
+              <input type="text" id="sp-new-regex" placeholder="example" style="flex:1; min-width: 150px; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; box-sizing: border-box;">
               <button id="sp-add-regex" style="padding: 8px 12px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer;">添加</button>
             </div>
             <div id="sp-regex-list" style="max-height:150px; overflow-y:auto; border:1px solid #588254; padding:6px; border-radius:6px; background: #5B6262;"></div>
@@ -871,7 +906,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             <label style="color: #ddd;"><input type="checkbox" id="sp-deselect-all"> 全不选</label>
           </div>
           <div id="sp-entries-list" style="max-height: 120px; overflow-y: auto; border: 1px solid #588254; padding: 8px; background: #5B6262; border-radius: 4px;">
-            <div style="color: #ddd; text-align: center;">点击搜索按钮加载条目</div>
+            <div style="color: #ddd; text-align: center;">点击搜索加载条目</div>
           </div>
           <button id="sp-save-config" style="margin-top: 12px; padding: 8px; width: 100%; background: #A3C956; color: #4D4135; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">保存配置</button>
           <div id="sp-worldbook-status" style="margin-top: 8px; font-size: 12px; color: #A3C956;"></div>
@@ -953,7 +988,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         document.getElementById('sp-save-config').addEventListener('click', saveCurrentConfig);
       }
 
-      // ========== 获取聊天记录（修复正则匹配）==========
+      // ========== 获取聊天记录 ==========
       async function getLastMessages() {
         try {
           const ctx = SillyTavern.getContext();
@@ -967,23 +1002,16 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             .map(r => {
               try {
                 const pattern = r.pattern.trim();
-                
-                // 格式1: 只输入标签名，如 "example" 或 "think"
                 if (/^\w+$/.test(pattern)) {
                   return new RegExp(`<${pattern}>[\\s\\S]*?<\\/${pattern}>`, 'g');
                 }
-                
-                // 格式2: 输入 <tag></tag> 或 <tag>...</tag>
                 const openTag = pattern.match(/^<(\w+)>/);
                 const closeTag = pattern.match(/<\/(\w+)>$/);
                 if (openTag && closeTag && openTag[1] === closeTag[1]) {
                   return new RegExp(`<${openTag[1]}>[\\s\\S]*?<\\/${openTag[1]}>`, 'g');
                 }
-                
-                // 格式3: 直接输入完整正则表达式
                 return new RegExp(pattern, 'g');
               } catch (e) {
-                console.warn('[正则修剪] 无效:', r.pattern);
                 return null;
               }
             })
@@ -1000,9 +1028,11 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         } catch (e) { return []; }
       }
 
-      // ========== 生成面板 ==========
+      // ========== 生成面板（新增日志功能）==========
       let autoMode = false, tuoguanMode = false, autoEventHandler = null, tuoguanEventHandler = null;
       let processedMessageIds = new Set(), contentClickHandler = null;
+      let lastSentMessages = null; // 🆕 保存最后发送的消息
+      let lastGeneratedOutput = ''; // 🆕 保存最后生成的输出
       const AUTO_MODE_KEY = 'friendCircleAutoMode', TUOGUAN_MODE_KEY = 'friendCircleTuoguanMode';
 
       function getMessageId(msg) { return `${msg.send_date || ''}_${msg.mes ? msg.mes.substring(0, 50) : ''}_${msg.is_user}`; }
@@ -1028,10 +1058,12 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             <button id="sp-gen-inject-input" style="padding: 8px 16px; background: #5B6262; color: white; border: none; border-radius: 4px; cursor: pointer;">注入输入框</button>
             <button id="sp-gen-inject-chat" style="padding: 8px 16px; background: #5B6262; color: white; border: none; border-radius: 4px; cursor: pointer;">注入聊天</button>
             <button id="sp-gen-inject-swipe" style="padding: 8px 16px; background: #5B6262; color: white; border: none; border-radius: 4px; cursor: pointer;">注入swipe</button>
+            <button id="sp-gen-log" style="padding: 8px 16px; background: #6B5B95; color: white; border: none; border-radius: 4px; cursor: pointer;">📋日志</button>
             <button id="sp-gen-auto" style="padding: 8px 16px; background: ${autoMode ? '#A3C956' : '#D87E5E'}; color: white; border: none; border-radius: 4px; cursor: pointer;">${autoMode ? '自动化(运行中)' : '自动化'}</button>
             <button id="sp-gen-tuoguan" style="padding: 8px 16px; background: ${tuoguanMode ? '#A3C956' : '#D87E5E'}; color: white; border: none; border-radius: 4px; cursor: pointer;">${tuoguanMode ? '托管(运行中)' : '托管'}</button>
           </div>
-          <div id="sp-gen-output" contenteditable="true" style="margin-top:8px;white-space:pre-wrap;max-height:200px;overflow-y:auto;padding:8px;border:1px solid #588254;border-radius:6px;background:#5B6262;color:#fff;min-height:60px;"></div>
+          <div id="sp-output-label" style="font-size:12px;color:#888;margin-bottom:4px;">📤 生成输出:</div>
+          <div id="sp-gen-output" contenteditable="true" style="white-space:pre-wrap;max-height:200px;overflow-y:auto;padding:8px;border:1px solid #588254;border-radius:6px;background:#5B6262;color:#fff;min-height:60px;"></div>
         `;
 
         const PROMPTS_KEY = 'friendCircleUserPrompts', RANDOM_PROMPTS_KEY = 'friendCircleRandomPrompts';
@@ -1042,6 +1074,38 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           const enabled = loadRandomPrompts().filter(p => p.enabled);
           if (enabled.length === 0) return null;
           return enabled[Math.floor(Math.random() * enabled.length)].text;
+        }
+
+        // 🆕 格式化日志显示
+        function formatMessagesLog(messages) {
+          if (!messages || messages.length === 0) return '暂无发送记录';
+          
+          let output = `═══════════════════════════════════\n`;
+          output += `📨 发送给AI的完整内容 (${messages.length} 条消息)\n`;
+          output += `═══════════════════════════════════\n\n`;
+          
+          messages.forEach((msg, idx) => {
+            const roleEmoji = msg.role === 'system' ? '⚙️' : msg.role === 'user' ? '👤' : '🤖';
+            const roleName = msg.role === 'system' ? 'System' : msg.role === 'user' ? 'User' : 'Assistant';
+            
+            output += `┌─── ${roleEmoji} [${idx + 1}] ${roleName} ───\n`;
+            output += `│\n`;
+            
+            // 将内容按行分割并添加前缀
+            const lines = msg.content.split('\n');
+            lines.forEach(line => {
+              output += `│ ${line}\n`;
+            });
+            
+            output += `│\n`;
+            output += `└${'─'.repeat(40)}\n\n`;
+          });
+          
+          output += `═══════════════════════════════════\n`;
+          output += `📊 统计: System=${messages.filter(m=>m.role==='system').length}, User=${messages.filter(m=>m.role==='user').length}, Assistant=${messages.filter(m=>m.role==='assistant').length}\n`;
+          output += `═══════════════════════════════════`;
+          
+          return output;
         }
 
         async function generateFriendCircle(selectedChat = []) {
@@ -1092,6 +1156,9 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           if (replacedPrompts.length > 0) messages.push({ role: "system", content: `<Tasks>\n${replacedPrompts.join('\n')}\n\n${sysConfig.tasksWrapper}\n</Tasks>` });
           if (sysConfig.assistantPrefill?.trim()) messages.push({ role: "assistant", content: sysConfig.assistantPrefill });
 
+          // 🆕 保存发送的消息
+          lastSentMessages = messages;
+
           try {
             const res = await fetch(`${url.replace(/\/$/, '')}/v1/chat/completions`, {
               method: 'POST',
@@ -1101,8 +1168,15 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             const output = data.choices?.map(c => c.message?.content || '').join('\n') || '[未生成内容]';
+            
+            // 🆕 保存输出
+            lastGeneratedOutput = output;
+            
             const outputEl = document.getElementById('sp-gen-output');
+            const labelEl = document.getElementById('sp-output-label');
             if (outputEl) outputEl.textContent = output;
+            if (labelEl) labelEl.textContent = '📤 生成输出:';
+            
             return output;
           } catch (e) {
             const outputEl = document.getElementById('sp-gen-output');
@@ -1192,18 +1266,48 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         if (localStorage.getItem(AUTO_MODE_KEY) === '1') toggleAutoMode(true);
         if (localStorage.getItem(TUOGUAN_MODE_KEY) === '1') toggleTuoguanMode(true);
 
+        // 🆕 用于切换显示模式
+        let showingLog = false;
+
         contentClickHandler = async (e) => {
           const target = e.target;
+          
           if (target.id === 'sp-gen-now') {
+            showingLog = false;
             try { await getLastMessages(); const cutted = await getLastMessages(); generateFriendCircle(cutted); } catch (err) { debugLog('生成异常', err.message); }
-          } else if (target.id === 'sp-gen-inject-input') {
-            const texts = document.getElementById('sp-gen-output')?.textContent.trim();
-            if (!texts) return alert('生成内容为空');
+          } 
+          
+          // 🆕 日志按钮
+          else if (target.id === 'sp-gen-log') {
+            const outputEl = document.getElementById('sp-gen-output');
+            const labelEl = document.getElementById('sp-output-label');
+            const logBtn = document.getElementById('sp-gen-log');
+            
+            if (!showingLog) {
+              // 切换到日志视图
+              showingLog = true;
+              if (outputEl) outputEl.textContent = formatMessagesLog(lastSentMessages);
+              if (labelEl) labelEl.textContent = '📋 发送日志 (点击"日志"返回):';
+              if (logBtn) { logBtn.textContent = '📤输出'; logBtn.style.background = '#588254'; }
+            } else {
+              // 切换回输出视图
+              showingLog = false;
+              if (outputEl) outputEl.textContent = lastGeneratedOutput || '暂无生成内容';
+              if (labelEl) labelEl.textContent = '📤 生成输出:';
+              if (logBtn) { logBtn.textContent = '📋日志'; logBtn.style.background = '#6B5B95'; }
+            }
+          }
+          
+          else if (target.id === 'sp-gen-inject-input') {
+            const texts = lastGeneratedOutput || document.getElementById('sp-gen-output')?.textContent.trim();
+            if (!texts || showingLog) return alert('请先生成内容');
             const inputEl = document.getElementById('send_textarea');
             if (inputEl) { inputEl.value = texts; inputEl.dispatchEvent(new Event('input', { bubbles: true })); }
-          } else if (target.id === 'sp-gen-inject-chat') {
-            const texts = document.getElementById('sp-gen-output')?.textContent.trim();
-            if (!texts) return alert('生成内容为空');
+          } 
+          
+          else if (target.id === 'sp-gen-inject-chat') {
+            const texts = lastGeneratedOutput || document.getElementById('sp-gen-output')?.textContent.trim();
+            if (!texts || showingLog) return alert('请先生成内容');
             const ctx = SillyTavern.getContext();
             if (!ctx?.chat?.length) return alert('未找到消息');
             const lastAiMes = [...ctx.chat].reverse().find(m => m.is_user === false);
@@ -1212,16 +1316,22 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             const aiMes = [...allMes].reverse().find(m => !m.classList.contains('user'));
             if (!aiMes) return alert('未找到DOM中的AI消息');
             simulateEditMessage(aiMes, lastAiMes.mes + '\n' + texts);
-          } else if (target.id === 'sp-gen-inject-swipe') {
-            const texts = document.getElementById('sp-gen-output')?.textContent.trim();
-            if (!texts) return alert('生成内容为空');
+          } 
+          
+          else if (target.id === 'sp-gen-inject-swipe') {
+            const texts = lastGeneratedOutput || document.getElementById('sp-gen-output')?.textContent.trim();
+            if (!texts || showingLog) return alert('请先生成内容');
             const inputEl = document.getElementById('send_textarea');
             if (inputEl) { inputEl.value = `/addswipe ${texts}`; inputEl.dispatchEvent(new Event('input', { bubbles: true })); }
             const sendBtn = document.getElementById('send_but');
             if (sendBtn) sendBtn.click();
-          } else if (target.id === 'sp-gen-auto') {
+          } 
+          
+          else if (target.id === 'sp-gen-auto') {
             toggleAutoMode();
-          } else if (target.id === 'sp-gen-tuoguan') {
+          } 
+          
+          else if (target.id === 'sp-gen-tuoguan') {
             toggleTuoguanMode();
           }
         };
