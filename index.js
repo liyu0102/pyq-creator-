@@ -30,10 +30,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
 
       if (document.getElementById('star-fab')) return;
 
-      function isMobile() {
-        return window.innerWidth <= 480;
-      }
-
       // 🌟按钮
       const fab = document.createElement('div');
       fab.id = 'star-fab';
@@ -117,7 +113,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
       panel.id = 'star-panel';
       const savedScale = localStorage.getItem('starPanelScale') || 'normal';
       panel.className = `sp-scale-${savedScale}`;
-      
+
       panel.innerHTML = `
         <div class="sp-panel-header">
           <span class="sp-header-title">🌟 ${MODULE_NAME}</span>
@@ -130,10 +126,10 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           <div class="sp-btn" data-key="api">API配置</div>
           <div class="sp-btn" data-key="system-prompt">系统提示词</div>
           <div class="sp-btn" data-key="prompt">提示词配置</div>
+          <div class="sp-btn" data-key="worldbook">世界书配置</div>
           <div class="sp-btn" data-key="random-prompt">随机提示词</div>
           <div class="sp-btn" data-key="random-macro">随机数宏</div>
           <div class="sp-btn" data-key="chat">聊天配置</div>
-          <div class="sp-btn" data-key="worldbook">世界书配置</div>
           <div class="sp-btn" data-key="gen">生成</div>
         </div>
         <div id="sp-content-area" class="sp-subpanel">
@@ -148,11 +144,11 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         const savedHeight = localStorage.getItem('starPanelHeight');
         const savedWidth = localStorage.getItem('starPanelWidth');
         const fullWidthMode = localStorage.getItem('starPanelFullWidth') === '1';
-        
+
         if (savedHeight) {
           panel.style.maxHeight = savedHeight + 'vh';
         }
-        
+
         if (fullWidthMode) {
           panel.classList.add('sp-fullwidth');
         } else {
@@ -231,11 +227,11 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         const maxWidth = Math.min(500, window.innerWidth - 20);
         const currentWidth = Math.min(parseInt(localStorage.getItem('starPanelWidth') || '340'), maxWidth);
         const fullWidthMode = localStorage.getItem('starPanelFullWidth') === '1';
-        
+
         content.innerHTML = `
         <div style="padding: 12px; background: #2a2a3e; border-radius: 8px;">
           <h3 style="color: #A3C956; margin-bottom: 16px;">⚙️ 界面设置</h3>
-          
+
           <div style="margin-bottom: 12px;">
             <span style="color: #ddd;">界面缩放：</span>
             <select id="sp-scale-select" style="padding: 6px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; width: 100%; margin-top: 4px; box-sizing: border-box;">
@@ -245,7 +241,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               <option value="xlarge" ${currentScale === 'xlarge' ? 'selected' : ''}>超大</option>
             </select>
           </div>
-          
+
           <div style="margin-bottom: 12px;">
             <span style="color: #ddd;">面板高度：</span>
             <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
@@ -253,14 +249,14 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               <span id="sp-height-value" style="color: #A3C956; min-width: 45px;">${localStorage.getItem('starPanelHeight') || '85'}%</span>
             </div>
           </div>
-          
+
           <div style="margin-bottom: 12px; padding: 10px; background: #3a3a4e; border-radius: 6px;">
             <label style="display: flex; align-items: center; gap: 8px; color: #ddd; cursor: pointer;">
               <input type="checkbox" id="sp-fullwidth-toggle" ${fullWidthMode ? 'checked' : ''} style="width: 18px; height: 18px;">
               <span>📱 全屏宽度模式</span>
             </label>
           </div>
-          
+
           <div id="sp-width-container" style="margin-bottom: 12px; ${fullWidthMode ? 'opacity: 0.5; pointer-events: none;' : ''}">
             <span style="color: #ddd;">面板宽度：</span>
             <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
@@ -268,11 +264,11 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               <span id="sp-width-value" style="color: #A3C956; min-width: 50px;">${currentWidth}px</span>
             </div>
           </div>
-          
+
           <button id="sp-reset-settings" style="width: 100%; padding: 10px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px;">恢复默认设置</button>
         </div>
         `;
-        
+
         document.getElementById('sp-scale-select').addEventListener('change', (e) => {
           const scale = e.target.value;
           localStorage.setItem('starPanelScale', scale);
@@ -280,19 +276,19 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           if (panel.classList.contains('sp-visible')) panel.classList.add('sp-visible');
           if (localStorage.getItem('starPanelFullWidth') === '1') panel.classList.add('sp-fullwidth');
         });
-        
+
         document.getElementById('sp-height-slider').addEventListener('input', (e) => {
           const height = e.target.value;
           document.getElementById('sp-height-value').textContent = height + '%';
           localStorage.setItem('starPanelHeight', height);
           panel.style.maxHeight = height + 'vh';
         });
-        
+
         document.getElementById('sp-fullwidth-toggle').addEventListener('change', (e) => {
           const fullWidth = e.target.checked;
           localStorage.setItem('starPanelFullWidth', fullWidth ? '1' : '0');
           const widthContainer = document.getElementById('sp-width-container');
-          
+
           if (fullWidth) {
             panel.classList.add('sp-fullwidth');
             widthContainer.style.opacity = '0.5';
@@ -305,7 +301,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             panel.style.width = savedWidth + 'px';
           }
         });
-        
+
         document.getElementById('sp-width-slider').addEventListener('input', (e) => {
           const width = e.target.value;
           document.getElementById('sp-width-value').textContent = width + 'px';
@@ -314,7 +310,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             panel.style.width = width + 'px';
           }
         });
-        
+
         document.getElementById('sp-reset-settings').addEventListener('click', () => {
           localStorage.removeItem('starPanelScale');
           localStorage.removeItem('starPanelHeight');
@@ -331,33 +327,81 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
       // ========== API配置面板 ==========
       function showApiConfig() {
         const content = document.getElementById("sp-content-area");
+        const API_CONFIGS_KEY = 'friendCircleApiConfigs';
+        let savedConfigs = [];
+        try {
+          savedConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY) || '[]');
+        } catch { savedConfigs = []; }
+
         content.innerHTML = `
           <div style="padding: 12px; background: #4D4135; border-radius: 8px;">
             <h3 style="color: #A3C956; margin-bottom: 12px;">🔌 API配置</h3>
-            <label style="color: #ddd; display: block; margin-bottom: 8px;">
-              API URL: 
-              <input type="text" id="api-url-input" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; margin-top: 4px; box-sizing: border-box;">
-            </label>
-            <label style="color: #ddd; display: block; margin-bottom: 8px;">
-              API Key: 
-              <input type="text" id="api-key-input" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; margin-top: 4px; box-sizing: border-box;">
-            </label>
-            <label style="color: #ddd; display: block; margin-bottom: 8px;">
-              模型: 
-              <select id="api-model-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; margin-top: 4px; box-sizing: border-box;"></select>
-            </label>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
-              <button id="api-save-btn" style="flex: 1; min-width: 80px; padding: 8px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer;">保存</button>
-              <button id="api-test-btn" style="flex: 1; min-width: 80px; padding: 8px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer;">测试</button>
-              <button id="api-refresh-models-btn" style="flex: 1; min-width: 80px; padding: 8px; background: #5B6262; color: white; border: none; border-radius: 4px; cursor: pointer;">刷新模型</button>
+            <div style="margin-bottom: 12px;">
+              <label style="color: #ddd; display: block; margin-bottom: 4px;">📁 已保存配置:</label>
+              <select id="sp-api-saved-configs" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; box-sizing: border-box;">
+                <option value="">-- 选择已保存的配置 --</option>
+              </select>
+              <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button id="sp-api-load-config" style="flex: 1; padding: 6px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer;">加载</button>
+                <button id="sp-api-delete-config" style="flex: 1; padding: 6px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer;">删除</button>
+              </div>
             </div>
-            <div id="api-status" style="margin-top:8px;font-size:12px;color:#A3C956;"></div>
+            <hr style="border-color: #588254; margin: 12px 0;">
+            <label style="color: #ddd; display: block; margin-bottom: 8px;">
+              配置名称:
+              <input type="text" id="sp-api-config-name" placeholder="给这个配置起个名字" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; margin-top: 4px; box-sizing: border-box;">
+            </label>
+            <label style="color: #ddd; display: block; margin-bottom: 8px;">
+              API URL:
+              <input type="text" id="sp-api-url-input" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; margin-top: 4px; box-sizing: border-box;">
+            </label>
+            <label style="color: #ddd; display: block; margin-bottom: 8px;">
+              API Key:
+              <input type="text" id="sp-api-key-input" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; margin-top: 4px; box-sizing: border-box;">
+            </label>
+
+            <!-- 模型选择区域优化：整合为一行 -->
+            <label style="color: #ddd; display: block; margin-bottom: 4px;">模型:</label>
+            <div class="sp-api-row" style="display: flex; gap: 6px; margin-bottom: 8px; align-items: center;">
+              <div style="flex: 1; min-width: 0;"> <!-- min-width:0 防止flex子项溢出 -->
+                <select id="sp-api-model-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; box-sizing: border-box; display: block;"></select>
+                <input type="text" id="sp-api-manual-model" placeholder="输入模型ID，如 gpt-4" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #A3C956; background: #5B6262; color: #fff; box-sizing: border-box; display: none;">
+              </div>
+              <button id="sp-api-toggle-manual" title="切换：列表选择 / 手动输入" style="width: 34px; height: 34px; padding: 0; background: #6B5B95; color: white; border: none; border-radius: 4px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">✏️</button>
+            </div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
+              <!-- 修改3: 保存当前 字体加粗 -->
+              <button id="sp-api-save-btn" style="flex: 1; min-width: 80px; padding: 8px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">保存当前</button>
+              <button id="sp-api-save-as-new" style="flex: 1; min-width: 80px; padding: 8px; background: #A3C956; color: #4D4135; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">存为新配置</button>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+              <button id="sp-api-test-btn" style="flex: 1; min-width: 80px; padding: 8px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer;">测试</button>
+              <button id="sp-api-refresh-models-btn" style="flex: 1; min-width: 80px; padding: 8px; background: #5B6262; color: white; border: none; border-radius: 4px; cursor: pointer;">刷新模型</button>
+            </div>
+            <div id="sp-api-status" style="margin-top:8px;font-size:12px;color:#A3C956;"></div>
           </div>
         `;
 
-        const modelSelect = document.getElementById("api-model-select");
-        document.getElementById("api-url-input").value = localStorage.getItem("independentApiUrl") || "";
-        document.getElementById("api-key-input").value = localStorage.getItem("independentApiKey") || "";
+        const modelSelect = document.getElementById("sp-api-model-select");
+        const manualModelInput = document.getElementById("sp-api-manual-model");
+        const toggleBtn = document.getElementById("sp-api-toggle-manual");
+        const savedConfigsSelect = document.getElementById("sp-api-saved-configs");
+
+        let isManualMode = false;
+
+        function populateSavedConfigs() {
+          savedConfigsSelect.innerHTML = '<option value="">-- 选择已保存的配置 --</option>';
+          savedConfigs.forEach((config, idx) => {
+            const opt = document.createElement("option");
+            opt.value = idx;
+            opt.textContent = config.name || `配置 ${idx + 1}`;
+            savedConfigsSelect.appendChild(opt);
+          });
+        }
+
+        document.getElementById("sp-api-url-input").value = localStorage.getItem("independentApiUrl") || "";
+        document.getElementById("sp-api-key-input").value = localStorage.getItem("independentApiKey") || "";
         const savedModel = localStorage.getItem("independentApiModel");
 
         function populateModelSelect(models) {
@@ -369,15 +413,17 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             opt.textContent = m;
             modelSelect.appendChild(opt);
           });
+          // 尝试恢复选中状态
           if (savedModel) {
             let existing = Array.from(modelSelect.options).find(o => o.value === savedModel);
             if (existing) {
-              existing.textContent = savedModel + "(已保存)";
+              existing.textContent = savedModel + " (当前)";
               modelSelect.value = savedModel;
             } else {
+              // 如果列表中没有当前模型，可能需要添加到列表或切换到手动模式
               const opt = document.createElement("option");
               opt.value = savedModel;
-              opt.textContent = savedModel + "(已保存)";
+              opt.textContent = savedModel + " (当前)";
               modelSelect.insertBefore(opt, modelSelect.firstChild);
               modelSelect.value = savedModel;
             }
@@ -395,28 +441,127 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         } else if (savedModel) {
           const opt = document.createElement("option");
           opt.value = savedModel;
-          opt.textContent = savedModel + "(已保存)";
+          opt.textContent = savedModel + " (当前)";
           modelSelect.appendChild(opt);
           modelSelect.value = savedModel;
         }
 
-        document.getElementById("api-save-btn").addEventListener("click", () => {
-          const url = document.getElementById("api-url-input").value;
-          const key = document.getElementById("api-key-input").value;
-          const model = modelSelect.value;
-          if (!url || !key || !model) return alert("请完整填写API信息");
+        populateSavedConfigs();
+
+        // 切换逻辑优化
+        toggleBtn.addEventListener("click", () => {
+          isManualMode = !isManualMode;
+          if (isManualMode) {
+            // 切换到手动输入模式
+            modelSelect.style.display = "none";
+            manualModelInput.style.display = "block";
+            toggleBtn.innerHTML = "📋"; // 变成列表图标
+            toggleBtn.style.background = "#588254";
+            if (modelSelect.value) {
+              manualModelInput.value = modelSelect.value;
+            }
+            manualModelInput.focus();
+          } else {
+            // 切换回列表模式
+            manualModelInput.style.display = "none";
+            modelSelect.style.display = "block";
+            toggleBtn.innerHTML = "✏️"; // 变成铅笔图标
+            toggleBtn.style.background = "#6B5B95";
+
+            // 如果手动输入了内容，尝试同步回列表
+            if (manualModelInput.value.trim()) {
+              const manualValue = manualModelInput.value.trim();
+              const exists = Array.from(modelSelect.options).some(o => o.value === manualValue);
+              if (!exists) {
+                const opt = document.createElement("option");
+                opt.value = manualValue;
+                opt.textContent = manualValue + " (手动)";
+                modelSelect.insertBefore(opt, modelSelect.firstChild);
+              }
+              modelSelect.value = manualValue;
+            }
+          }
+        });
+
+        function getCurrentModel() {
+          if (isManualMode) return manualModelInput.value.trim();
+          return modelSelect.value;
+        }
+
+        document.getElementById("sp-api-load-config").addEventListener("click", () => {
+          const idx = savedConfigsSelect.value;
+          if (idx === "") return alert("请先选择一个配置");
+          const config = savedConfigs[parseInt(idx)];
+          if (!config) return;
+          document.getElementById("sp-api-config-name").value = config.name || "";
+          document.getElementById("sp-api-url-input").value = config.url || "";
+          document.getElementById("sp-api-key-input").value = config.key || "";
+          if (config.model) {
+            // 加载配置时，默认更新两个控件的值
+            manualModelInput.value = config.model;
+            const exists = Array.from(modelSelect.options).some(o => o.value === config.model);
+            if (!exists) {
+              const opt = document.createElement("option");
+              opt.value = config.model;
+              opt.textContent = config.model;
+              modelSelect.insertBefore(opt, modelSelect.firstChild);
+            }
+            modelSelect.value = config.model;
+          }
+          document.getElementById("sp-api-status").textContent = `✅ 已加载配置: ${config.name}`;
+        });
+
+        document.getElementById("sp-api-delete-config").addEventListener("click", () => {
+          const idx = savedConfigsSelect.value;
+          if (idx === "") return alert("请先选择一个配置");
+          const config = savedConfigs[parseInt(idx)];
+          if (!confirm(`确定删除配置 "${config.name}" 吗？`)) return;
+          savedConfigs.splice(parseInt(idx), 1);
+          localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(savedConfigs));
+          populateSavedConfigs();
+          document.getElementById("sp-api-status").textContent = `✅ 已删除配置`;
+        });
+
+        document.getElementById("sp-api-save-btn").addEventListener("click", () => {
+          const url = document.getElementById("sp-api-url-input").value.trim();
+          const key = document.getElementById("sp-api-key-input").value.trim();
+          const model = getCurrentModel();
+          if (!url || !key || !model) return alert("请完整填写API信息（URL、Key、模型）");
           localStorage.setItem("independentApiUrl", url);
           localStorage.setItem("independentApiKey", key);
           localStorage.setItem("independentApiModel", model);
-          document.getElementById("api-status").textContent = "✅ 已保存";
+          document.getElementById("sp-api-status").textContent = "✅ 已保存为当前使用配置";
         });
 
-        document.getElementById("api-test-btn").addEventListener("click", async () => {
-          const urlRaw = document.getElementById("api-url-input").value || localStorage.getItem("independentApiUrl");
-          const key = document.getElementById("api-key-input").value || localStorage.getItem("independentApiKey");
-          const model = modelSelect.value || localStorage.getItem("independentApiModel");
+        document.getElementById("sp-api-save-as-new").addEventListener("click", () => {
+          const nameInput = document.getElementById("sp-api-config-name");
+          const name = nameInput ? nameInput.value.trim() : '';
+          const url = document.getElementById("sp-api-url-input").value.trim();
+          const key = document.getElementById("sp-api-key-input").value.trim();
+          const model = getCurrentModel();
+          if (!name) { nameInput && nameInput.focus(); return alert("请输入配置名称"); }
+          if (!url || !key || !model) return alert("请完整填写API信息（URL、Key、模型）");
+          const existingIdx = savedConfigs.findIndex(c => c.name === name);
+          if (existingIdx >= 0) {
+            if (!confirm(`配置 "${name}" 已存在，是否覆盖？`)) return;
+            savedConfigs[existingIdx] = { name, url, key, model };
+          } else {
+            savedConfigs.push({ name, url, key, model });
+          }
+          localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(savedConfigs));
+          localStorage.setItem("independentApiUrl", url);
+          localStorage.setItem("independentApiKey", key);
+          localStorage.setItem("independentApiModel", model);
+          populateSavedConfigs();
+          document.getElementById("sp-api-status").textContent = `✅ 已保存配置: ${name}`;
+        });
+
+        document.getElementById("sp-api-test-btn").addEventListener("click", async () => {
+          const urlRaw = document.getElementById("sp-api-url-input").value.trim() || localStorage.getItem("independentApiUrl");
+          const key = document.getElementById("sp-api-key-input").value.trim() || localStorage.getItem("independentApiKey");
+          const model = getCurrentModel() || localStorage.getItem("independentApiModel");
           if (!urlRaw || !key || !model) return alert("请完整填写API信息");
-          document.getElementById("api-status").textContent = "正在测试...";
+          document.getElementById("sp-api-status").textContent = "正在测试...";
           try {
             const res = await fetch(`${urlRaw.replace(/\/$/, "")}/v1/chat/completions`, {
               method: "POST",
@@ -424,16 +569,17 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               body: JSON.stringify({ model, messages: [{ role: "user", content: "ping" }], max_tokens: 100 })
             });
             if (!res.ok) throw new Error(`返回 ${res.status}`);
-            document.getElementById("api-status").textContent = `✅ 模型 ${model} 可用`;
+            document.getElementById("sp-api-status").textContent = `✅ 模型 ${model} 可用`;
           } catch (e) {
-            document.getElementById("api-status").textContent = "❌ 连接失败: " + e.message;
+            document.getElementById("sp-api-status").textContent = "❌ 连接失败: " + e.message;
           }
         });
 
-        document.getElementById("api-refresh-models-btn").addEventListener("click", async () => {
-          const url = document.getElementById("api-url-input").value || localStorage.getItem("independentApiUrl");
-          const key = document.getElementById("api-key-input").value || localStorage.getItem("independentApiKey");
+        document.getElementById("sp-api-refresh-models-btn").addEventListener("click", async () => {
+          const url = document.getElementById("sp-api-url-input").value.trim() || localStorage.getItem("independentApiUrl");
+          const key = document.getElementById("sp-api-key-input").value.trim() || localStorage.getItem("independentApiKey");
           if (!url || !key) return alert("请先填写 URL 和 Key");
+          document.getElementById("sp-api-status").textContent = "正在获取模型列表...";
           try {
             const res = await fetch(`${url.replace(/\/$/, "")}/v1/models`, { headers: { Authorization: `Bearer ${key}` } });
             const data = await res.json();
@@ -444,22 +590,25 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             if (ids.length === 0) throw new Error("未解析到模型");
             localStorage.setItem("independentApiModels", JSON.stringify(ids));
             populateModelSelect(ids);
-            document.getElementById("api-status").textContent = `✅ 已拉取 ${ids.length} 个模型`;
+
+            // 刷新成功后，切回列表模式
+            if (isManualMode) toggleBtn.click();
+
+            document.getElementById("sp-api-status").textContent = `✅ 已拉取 ${ids.length} 个模型`;
           } catch (e) {
-            document.getElementById("api-status").textContent = "❌ 拉取失败: " + e.message;
+            document.getElementById("sp-api-status").textContent = "❌ 拉取失败: " + e.message + "\n💡 请点击「✏️」切换到手动输入模式";
           }
         });
       }
 
-      // ========== 系统提示词配置 ==========
+      // ========== 系统提示词配置 (修改：图标和标题颜色) ==========
       function showSystemPromptConfig() {
         const content = document.getElementById('sp-content-area');
         const defaults = {
           systemMain: `你是文本处理助手。接下来会收到三部分信息：
-1. <WorldBook_Reference>：背景参考资料（仅参考，不输出）
-2. <ChatHistory_Reference>：聊天记录（仅参考，不输出）
-3. <Tasks>：具体任务要求
-
+<WorldBook_Reference>：背景参考资料（仅参考，不输出）
+<ChatHistory_Reference>：聊天记录（仅参考，不输出）
+<Tasks>：具体任务要求
 请直接按<Tasks>中的要求输出结果，不要添加任何开场白、解释或确认语句。`,
           systemMiddle: `以上参考信息结束。接下来是任务要求，请直接输出结果内容：`,
           tasksWrapper: `注意：只输出摘要/处理结果本身，不要续写聊天内容。`,
@@ -468,30 +617,52 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         const saved = JSON.parse(localStorage.getItem('friendCircleSystemPrompts') || '{}');
         const config = { ...defaults, ...saved };
 
+        // 修改1&2：标题颜色 #D87E5E，Assistant预填充前的小花颜色 #D87E5E
         content.innerHTML = `
-        <div style="padding: 10px; background: #2a2a3e; border-radius: 8px;">
-          <h3 style="color: #fff; margin-bottom: 12px;">⚙️ 系统提示词配置</h3>
+        <div style="padding: 12px; background: #4D4135; border-radius: 8px;">
+          <h3 style="color: #D87E5E; margin-bottom: 12px;">⚙️ 系统提示词</h3>
+
+          <!-- 主系统提示词 -->
           <div style="margin-bottom: 12px;">
-            <label style="color: #fff; display: block; margin-bottom: 4px;">📌 主系统提示词</label>
-            <textarea id="sp-sys-main" rows="4" style="width: 100%; padding: 8px; border-radius: 4px; background: #1a1a2e; color: #fff; border: 1px solid #444; resize: vertical; box-sizing: border-box; min-height: 80px;">${config.systemMain}</textarea>
+            <label style="color: #ddd; display: block; margin-bottom: 4px;">
+              <span style="color: #A3C956;">❖</span> 主系统提示词
+            </label>
+            <textarea id="sp-sys-main" rows="4" style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; resize: vertical; box-sizing: border-box; min-height: 80px; font-family: inherit; line-height: 1.5;">${config.systemMain}</textarea>
           </div>
+
+          <!-- 过渡提示词 -->
           <div style="margin-bottom: 12px;">
-            <label style="color: #fff; display: block; margin-bottom: 4px;">📌 过渡提示词</label>
-            <textarea id="sp-sys-middle" rows="2" style="width: 100%; padding: 8px; border-radius: 4px; background: #1a1a2e; color: #fff; border: 1px solid #444; resize: vertical; box-sizing: border-box;">${config.systemMiddle}</textarea>
+            <label style="color: #ddd; display: block; margin-bottom: 4px;">
+              <span style="color: #A3C956;">❖</span> 过渡提示词
+            </label>
+            <textarea id="sp-sys-middle" rows="2" style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; resize: vertical; box-sizing: border-box; font-family: inherit; line-height: 1.5;">${config.systemMiddle}</textarea>
           </div>
+
+          <!-- 任务包装后缀 -->
           <div style="margin-bottom: 12px;">
-            <label style="color: #fff; display: block; margin-bottom: 4px;">📌 任务包装后缀</label>
-            <textarea id="sp-sys-tasks" rows="2" style="width: 100%; padding: 8px; border-radius: 4px; background: #1a1a2e; color: #fff; border: 1px solid #444; resize: vertical; box-sizing: border-box;">${config.tasksWrapper}</textarea>
+            <label style="color: #ddd; display: block; margin-bottom: 4px;">
+              <span style="color: #A3C956;">❖</span> 任务包装后缀
+            </label>
+            <textarea id="sp-sys-tasks" rows="2" style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; resize: vertical; box-sizing: border-box; font-family: inherit; line-height: 1.5;">${config.tasksWrapper}</textarea>
           </div>
+
+          <!-- Assistant预填充 -->
           <div style="margin-bottom: 12px;">
-            <label style="color: #fff; display: block; margin-bottom: 4px;">📌 Assistant预填充（可选）</label>
-            <textarea id="sp-sys-prefill" rows="2" placeholder="留空表示不预填充" style="width: 100%; padding: 8px; border-radius: 4px; background: #1a1a2e; color: #fff; border: 1px solid #444; resize: vertical; box-sizing: border-box;">${config.assistantPrefill}</textarea>
+            <label style="color: #ddd; display: block; margin-bottom: 4px;">
+              <span style="color: #D87E5E;">❖</span> Assistant预填充
+              <span style="color: #888; font-size: 11px; margin-left: 4px;">（可选）</span>
+            </label>
+            <textarea id="sp-sys-prefill" rows="2" placeholder="留空表示不预填充..." style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px dashed #588254; resize: vertical; box-sizing: border-box; font-family: inherit; line-height: 1.5;">${config.assistantPrefill}</textarea>
           </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button id="sp-sys-save" style="flex: 1; min-width: 100px; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">💾 保存</button>
-            <button id="sp-sys-reset" style="padding: 10px 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">🔄 恢复默认</button>
+
+          <!-- 按钮区域 -->
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
+            <button id="sp-sys-save" style="flex: 1; min-width: 100px; padding: 8px; background: #A3C956; color: #4D4135; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">保存设定</button>
+            <button id="sp-sys-reset" style="padding: 8px 16px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer;">恢复默认</button>
           </div>
-          <div id="sp-sys-status" style="margin-top: 8px; color: #4caf50; font-size: 12px;"></div>
+
+          <!-- 状态提示 -->
+          <div id="sp-sys-status" style="margin-top: 8px; font-size: 12px; color: #A3C956;"></div>
         </div>
         `;
 
@@ -514,7 +685,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         });
       }
 
-      // ========== 提示词配置 ==========
+      // ========== 提示词配置 (修改：内联编辑) ==========
       function showPromptConfig() {
         content.innerHTML = `
           <div style="padding: 12px; background: #4D4135; border-radius: 8px;">
@@ -564,16 +735,80 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             const btnContainer = document.createElement('div');
             btnContainer.style.cssText = 'display:flex;gap:4px;flex-shrink:0;';
 
+            const upBtn = document.createElement('button');
+            upBtn.textContent = '↑';
+            upBtn.title = '上移';
+            upBtn.style.cssText = 'padding:4px 6px;background:#5B6262;border:none;border-radius:3px;cursor:pointer;font-size:12px;';
+            if (idx === 0) upBtn.style.opacity = '0.3';
+            upBtn.addEventListener('click', () => {
+              if (idx > 0) {
+                const temp = friendCirclePrompts[idx];
+                friendCirclePrompts[idx] = friendCirclePrompts[idx - 1];
+                friendCirclePrompts[idx - 1] = temp;
+                localStorage.setItem(PROMPTS_KEY, JSON.stringify(friendCirclePrompts));
+                renderPromptList();
+              }
+            });
+
+            const downBtn = document.createElement('button');
+            downBtn.textContent = '↓';
+            downBtn.title = '下移';
+            downBtn.style.cssText = 'padding:4px 6px;background:#5B6262;border:none;border-radius:3px;cursor:pointer;font-size:12px;';
+            if (idx === friendCirclePrompts.length - 1) downBtn.style.opacity = '0.3';
+            downBtn.addEventListener('click', () => {
+              if (idx < friendCirclePrompts.length - 1) {
+                const temp = friendCirclePrompts[idx];
+                friendCirclePrompts[idx] = friendCirclePrompts[idx + 1];
+                friendCirclePrompts[idx + 1] = temp;
+                localStorage.setItem(PROMPTS_KEY, JSON.stringify(friendCirclePrompts));
+                renderPromptList();
+              }
+            });
+
+            // 修改5：内联编辑逻辑
             const editBtn = document.createElement('button');
             editBtn.textContent = '✏️';
             editBtn.style.cssText = 'padding:4px 6px;background:#D87E5E;border:none;border-radius:3px;cursor:pointer;font-size:12px;';
             editBtn.addEventListener('click', () => {
-              const newText = prompt('编辑提示词:', p.text);
-              if (newText !== null && newText.trim()) {
-                friendCirclePrompts[idx].text = newText.trim();
-                localStorage.setItem(PROMPTS_KEY, JSON.stringify(friendCirclePrompts));
-                renderPromptList();
-              }
+              // 临时清空当前条目的显示内容，替换为编辑框
+              div.innerHTML = '';
+
+              const editContainer = document.createElement('div');
+              editContainer.style.cssText = 'display:flex; gap:5px; width:100%; padding:4px;';
+
+              const textarea = document.createElement('textarea');
+              textarea.value = p.text;
+              textarea.style.cssText = 'flex:1; background:#444; color:#fff; border:1px solid #D87E5E; border-radius:4px; padding:4px; resize:vertical; min-height:40px; font-family:inherit;';
+
+              const actionsDiv = document.createElement('div');
+              actionsDiv.style.cssText = 'display:flex; flex-direction:column; gap:4px; justify-content:center;';
+
+              const saveBtn = document.createElement('button');
+              saveBtn.textContent = '✅';
+              saveBtn.title = '保存';
+              saveBtn.style.cssText = 'cursor:pointer; background:#588254; border:none; border-radius:3px; padding:4px; color:white;';
+
+              const cancelBtn = document.createElement('button');
+              cancelBtn.textContent = '🔙';
+              cancelBtn.title = '取消';
+              cancelBtn.style.cssText = 'cursor:pointer; background:#5B6262; border:none; border-radius:3px; padding:4px; color:white;';
+
+              saveBtn.onclick = () => {
+                  const val = textarea.value.trim();
+                  if (val) {
+                      friendCirclePrompts[idx].text = val;
+                      localStorage.setItem(PROMPTS_KEY, JSON.stringify(friendCirclePrompts));
+                      renderPromptList();
+                  }
+              };
+
+              cancelBtn.onclick = () => {
+                   renderPromptList(); // 重新渲染列表以恢复原状
+              };
+
+              actionsDiv.append(saveBtn, cancelBtn);
+              editContainer.append(textarea, actionsDiv);
+              div.appendChild(editContainer);
             });
 
             const tagBtn = document.createElement('button');
@@ -598,12 +833,13 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               renderPromptList();
             });
 
-            btnContainer.append(editBtn, tagBtn, delBtn);
+            btnContainer.append(upBtn, downBtn, editBtn, tagBtn, delBtn);
             row.append(checkbox, span, btnContainer);
             div.appendChild(row);
 
             if (p.tags && p.tags.length > 0) {
               const tagsRow = document.createElement('div');
+              tagsRow.className = 'tags-row'; // 方便识别
               tagsRow.style.cssText = 'margin-left:20px;margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;';
               p.tags.forEach((t, tIdx) => {
                 const tagEl = document.createElement('span');
@@ -732,7 +968,8 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               <button id="sp-add-macro-btn" style="padding: 8px 12px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer;">添加</button>
             </div>
             <div id="sp-macro-list" style="max-height: 180px; overflow-y: auto; border: 1px solid #588254; padding: 8px; background: #5B6262; border-radius: 4px;"></div>
-            <button id="sp-save-macros-btn" style="margin-top: 12px; padding: 10px; width: 100%; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer;">保存配置</button>
+            <!-- 修改4: 保存配置 字体加粗 -->
+            <button id="sp-save-macros-btn" style="margin-top: 12px; padding: 10px; width: 100%; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">保存配置</button>
           </div>
         `;
 
@@ -891,101 +1128,437 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         loadRegexList();
       }
 
-      // ========== 世界书配置 ==========
+      // ========== 世界书配置 (隐藏调试信息) ==========
       async function showWorldbookPanel() {
+        const STATIC_CONFIG_KEY = 'friendCircleStaticConfig';
+        const DYNAMIC_CONFIG_KEY = 'friendCircleDynamicConfig';
+        const LAST_WORLDBOOK_KEY = 'friendCircleLastWorldbook';
+
+        const lastState = JSON.parse(localStorage.getItem(LAST_WORLDBOOK_KEY) || '{}');
+
         content.innerHTML = `
         <div style="padding: 12px; background: #4D4135; border-radius: 8px;">
           <h3 style="color: #A3C956; margin-bottom: 12px;">📚 世界书配置</h3>
+
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <div style="flex: 1;">
+              <label style="color: #ddd; display: block; margin-bottom: 4px;">📁 已配置的世界书:</label>
+              <select id="sp-configured-books" style="width: 100%; padding: 6px 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; box-sizing: border-box;">
+                <option value="">-- 选择已配置的世界书 --</option>
+              </select>
+            </div>
+            <div style="display: flex; align-items: flex-end;">
+              <button id="sp-delete-book-config" title="删除当前选中的配置" style="padding: 6px 10px; height: 32px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️</button>
+            </div>
+          </div>
+
           <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-            <input type="text" id="sp-worldbook-input" placeholder="输入世界书名称" style="flex: 1; min-width: 120px; padding: 6px 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; box-sizing: border-box;">
+            <input type="text" id="sp-worldbook-input" placeholder="输入世界书名称" value="${lastState.worldbookName || ''}" style="flex: 1; min-width: 120px; padding: 6px 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; box-sizing: border-box;">
             <button id="sp-search-btn" style="padding: 6px 10px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer;">🔎静态</button>
             <button id="sp-robot-btn" style="padding: 6px 10px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer;">🤖动态</button>
           </div>
-          <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+          <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; align-items: center;">
             <label style="color: #ddd;"><input type="checkbox" id="sp-select-all"> 全选</label>
             <label style="color: #ddd;"><input type="checkbox" id="sp-deselect-all"> 全不选</label>
+            <label style="color: #ddd;"><input type="checkbox" id="sp-show-disabled"> 显示禁用条目</label>
           </div>
-          <div id="sp-entries-list" style="max-height: 120px; overflow-y: auto; border: 1px solid #588254; padding: 8px; background: #5B6262; border-radius: 4px;">
-            <div style="color: #ddd; text-align: center;">点击搜索加载条目</div>
+          <div id="sp-entries-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #588254; padding: 8px; background: #5B6262; border-radius: 4px;">
+            <div style="color: #ddd; text-align: center;">点击搜索加载条目，或从上方选择已配置的世界书</div>
           </div>
-          <button id="sp-save-config" style="margin-top: 12px; padding: 8px; width: 100%; background: #A3C956; color: #4D4135; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">保存配置</button>
+          <button id="sp-save-config" style="margin-top: 12px; padding: 8px; width: 100%; background: #A3C956; color: #4D4135; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">💾 保存配置</button>
           <div id="sp-worldbook-status" style="margin-top: 8px; font-size: 12px; color: #A3C956;"></div>
         </div>
         `;
 
-        const STATIC_CONFIG_KEY = 'friendCircleStaticConfig';
-        const DYNAMIC_CONFIG_KEY = 'friendCircleDynamicConfig';
-        let currentWorldbookName = '', currentFileId = '', currentEntries = {}, currentMode = '', currentConfig = {};
+        let currentWorldbookName = lastState.worldbookName || '';
+        let currentFileId = lastState.fileId || '';
+        let currentEntries = {};
+        let currentMode = lastState.mode || '';
+        let currentConfig = {};
+        let showDisabled = false;
 
         let moduleWI;
-        try { moduleWI = await import('/scripts/world-info.js'); } catch (e) {
-          document.getElementById('sp-worldbook-status').textContent = '❌ world-info.js 加载失败';
+        try {
+          moduleWI = await import('/scripts/world-info.js');
+        } catch (e) {
+          document.getElementById('sp-worldbook-status').textContent = '❌ world-info.js 加载失败: ' + e.message;
           return;
         }
 
+        function populateConfiguredBooks() {
+          const select = document.getElementById('sp-configured-books');
+          select.innerHTML = '<option value="">-- 选择已配置的世界书 --</option>';
+
+          const staticConfig = JSON.parse(localStorage.getItem(STATIC_CONFIG_KEY) || '{}');
+          const dynamicConfig = JSON.parse(localStorage.getItem(DYNAMIC_CONFIG_KEY) || '{}');
+
+          const allBooks = new Set([...Object.keys(staticConfig), ...Object.keys(dynamicConfig)]);
+
+          allBooks.forEach(bookName => {
+            const staticCount = staticConfig[bookName]?.enabledUids?.length || 0;
+            const dynamicCount = dynamicConfig[bookName]?.enabledUids?.length || 0;
+
+            const opt = document.createElement('option');
+            opt.value = bookName;
+
+            let label = bookName;
+            const parts = [];
+            if (staticCount > 0) parts.push(`静态:${staticCount}`);
+            if (dynamicCount > 0) parts.push(`动态:${dynamicCount}`);
+            if (parts.length > 0) label += ` (${parts.join(', ')})`;
+
+            opt.textContent = label;
+
+            if (bookName === currentWorldbookName) {
+              opt.selected = true;
+            }
+
+            select.appendChild(opt);
+          });
+        }
+
+        // 删除配置按钮逻辑
+        document.getElementById('sp-delete-book-config').addEventListener('click', () => {
+          const select = document.getElementById('sp-configured-books');
+          const bookName = select.value;
+          if (!bookName) return alert('请先在左侧选择一个已配置的世界书');
+
+          if (!confirm(`确定要删除 "${bookName}" 的配置记录吗？\n(这不会删除世界书文件本身)`)) return;
+
+          const staticConfig = JSON.parse(localStorage.getItem(STATIC_CONFIG_KEY) || '{}');
+          const dynamicConfig = JSON.parse(localStorage.getItem(DYNAMIC_CONFIG_KEY) || '{}');
+
+          if (staticConfig[bookName]) delete staticConfig[bookName];
+          if (dynamicConfig[bookName]) delete dynamicConfig[bookName];
+
+          localStorage.setItem(STATIC_CONFIG_KEY, JSON.stringify(staticConfig));
+          localStorage.setItem(DYNAMIC_CONFIG_KEY, JSON.stringify(dynamicConfig));
+
+          // 清空当前视图
+          document.getElementById('sp-entries-list').innerHTML = '<div style="color: #ddd; text-align: center;">配置已删除</div>';
+          document.getElementById('sp-worldbook-status').textContent = '✅ 配置已删除';
+          document.getElementById('sp-worldbook-input').value = '';
+          currentWorldbookName = '';
+          currentFileId = '';
+          currentEntries = {};
+
+          populateConfiguredBooks();
+        });
+
+        function getEntryDisplayName(entry, id) {
+          let name = '';
+          if (entry.comment && entry.comment.trim()) {
+            name = entry.comment.trim();
+          } else if (entry.title && entry.title.trim()) {
+            name = entry.title.trim();
+          } else if (entry.name && entry.name.trim()) {
+            name = entry.name.trim();
+          } else if (entry.key) {
+            if (Array.isArray(entry.key)) {
+              name = entry.key.filter(k => k && k.trim()).join(', ');
+            } else if (typeof entry.key === 'string' && entry.key.trim()) {
+              name = entry.key.trim();
+            }
+          } else if (entry.keys && Array.isArray(entry.keys)) {
+            name = entry.keys.filter(k => k && k.trim()).join(', ');
+          } else if (entry.keyword && entry.keyword.trim()) {
+            name = entry.keyword.trim();
+          } else if (entry.uid !== undefined) {
+            name = `条目 #${entry.uid}`;
+          } else {
+            name = `条目 #${id}`;
+          }
+          return name || `未命名 #${id}`;
+        }
+
+        function getEntryKeys(entry) {
+          let keys = [];
+          if (entry.key) {
+            if (Array.isArray(entry.key)) {
+              keys = entry.key.filter(k => k && k.trim());
+            } else if (typeof entry.key === 'string' && entry.key.trim()) {
+              keys = entry.key.split(',').map(k => k.trim()).filter(Boolean);
+            }
+          }
+          if (entry.keys && Array.isArray(entry.keys)) {
+            keys = keys.concat(entry.keys.filter(k => k && k.trim()));
+          }
+          return [...new Set(keys)];
+        }
+
+        function isConstant(entry) {
+          return entry.constant === true || entry.constant === 1 || entry.alwaysActive === true;
+        }
+
+        function isDisabled(entry) {
+          return entry.disable === true || entry.disabled === true || entry.enabled === false;
+        }
+
         function saveCurrentConfig() {
-          if (!currentWorldbookName || !currentMode) return;
+          if (!currentWorldbookName || !currentMode) {
+            document.getElementById('sp-worldbook-status').textContent = '⚠️ 请先搜索并选择世界书';
+            return;
+          }
           const configKey = currentMode === 'static' ? STATIC_CONFIG_KEY : DYNAMIC_CONFIG_KEY;
-          const checkedUids = Array.from(document.querySelectorAll('#sp-entries-list input[type="checkbox"]:checked')).map(cb => cb.dataset.uid);
+          const checkedUids = Array.from(document.querySelectorAll('#sp-entries-list input[type="checkbox"][data-uid]:checked'))
+            .map(cb => cb.dataset.uid);
+
+          currentConfig = JSON.parse(localStorage.getItem(configKey) || '{}');
           currentConfig[currentWorldbookName] = { fileId: currentFileId, enabledUids: checkedUids };
           localStorage.setItem(configKey, JSON.stringify(currentConfig));
-          document.getElementById('sp-worldbook-status').textContent = `✅ 已保存 ${checkedUids.length} 个条目`;
+
+          localStorage.setItem(LAST_WORLDBOOK_KEY, JSON.stringify({
+            worldbookName: currentWorldbookName,
+            fileId: currentFileId,
+            mode: currentMode
+          }));
+
+          document.getElementById('sp-worldbook-status').textContent = `✅ 已保存 ${checkedUids.length} 个条目到 ${currentMode === 'static' ? '静态' : '动态'} 配置`;
+          populateConfiguredBooks();
         }
 
         function renderEntries(entries, enabledUids = []) {
           const container = document.getElementById('sp-entries-list');
           container.innerHTML = '';
-          Object.keys(entries).forEach(id => {
+
+          const entryKeys = Object.keys(entries);
+          let visibleCount = 0;
+          let totalCount = entryKeys.length;
+          let disabledCount = 0;
+          let constantCount = 0;
+
+          entryKeys.forEach(id => {
             const entry = entries[id];
-            if (entry.disable) return;
+            const disabled = isDisabled(entry);
+            const constant = isConstant(entry);
+
+            if (disabled) disabledCount++;
+            if (constant) constantCount++;
+
+            if (disabled && !showDisabled) return;
+
+            visibleCount++;
+
             const div = document.createElement('div');
-            div.style.cssText = 'display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;padding:4px;border-bottom:1px solid #588254;';
+            div.style.cssText = `display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;padding:6px;border-bottom:1px solid #588254;${disabled ? 'opacity:0.5;' : ''}`;
+
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.dataset.uid = id;
-            checkbox.checked = enabledUids.includes(id);
-            checkbox.addEventListener('change', saveCurrentConfig);
+            checkbox.checked = enabledUids.includes(id) || enabledUids.includes(String(id));
+            checkbox.style.cssText = 'margin-top: 2px; flex-shrink: 0;';
+            checkbox.addEventListener('change', () => {
+              const checkedCount = document.querySelectorAll('#sp-entries-list input[type="checkbox"][data-uid]:checked').length;
+              document.getElementById('sp-worldbook-status').textContent = `已选择 ${checkedCount} 个条目 (${currentMode === 'static' ? '静态' : '动态'}模式)`;
+            });
+
+            const infoDiv = document.createElement('div');
+            infoDiv.style.cssText = 'flex: 1; min-width: 0;';
+
+            const titleRow = document.createElement('div');
+            titleRow.style.cssText = 'display: flex; align-items: center; gap: 6px; flex-wrap: wrap;';
+
+            const badges = document.createElement('span');
+            badges.style.cssText = 'display: flex; gap: 4px; flex-shrink: 0;';
+
+            if (constant) {
+              const constBadge = document.createElement('span');
+              constBadge.textContent = '📌';
+              constBadge.title = '常驻条目';
+              constBadge.style.cssText = 'font-size: 12px;';
+              badges.appendChild(constBadge);
+            }
+
+            if (disabled) {
+              const disableBadge = document.createElement('span');
+              disableBadge.textContent = '🚫';
+              disableBadge.title = '已禁用';
+              disableBadge.style.cssText = 'font-size: 12px;';
+              badges.appendChild(disableBadge);
+            }
+
+            const keys = getEntryKeys(entry);
+            if (keys.length > 0 && !constant) {
+              const keyBadge = document.createElement('span');
+              keyBadge.textContent = '🔑';
+              keyBadge.title = '关键词触发';
+              keyBadge.style.cssText = 'font-size: 12px;';
+              badges.appendChild(keyBadge);
+            }
+
             const titleSpan = document.createElement('strong');
-            titleSpan.textContent = entry.title || entry.key || '无标题';
-            titleSpan.style.cssText = 'color:#A3C956;font-size:13px;';
-            div.append(checkbox, titleSpan);
+            titleSpan.textContent = getEntryDisplayName(entry, id);
+            titleSpan.style.cssText = 'color:#A3C956;font-size:13px;word-break:break-word;';
+
+            titleRow.appendChild(badges);
+            titleRow.appendChild(titleSpan);
+            infoDiv.appendChild(titleRow);
+
+            if (keys.length > 0) {
+              const keysRow = document.createElement('div');
+              keysRow.style.cssText = 'margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px;';
+              keys.slice(0, 5).forEach(k => {
+                const keyTag = document.createElement('span');
+                keyTag.textContent = k;
+                keyTag.style.cssText = 'padding: 2px 6px; font-size: 10px; border-radius: 10px; background: #588254; color: #fff;';
+                keysRow.appendChild(keyTag);
+              });
+              if (keys.length > 5) {
+                const moreTag = document.createElement('span');
+                moreTag.textContent = `+${keys.length - 5}`;
+                moreTag.style.cssText = 'padding: 2px 6px; font-size: 10px; border-radius: 10px; background: #444; color: #aaa;';
+                keysRow.appendChild(moreTag);
+              }
+              infoDiv.appendChild(keysRow);
+            }
+
+            if (entry.content && entry.content.trim()) {
+              const previewRow = document.createElement('div');
+              const previewText = entry.content.trim().substring(0, 50).replace(/\n/g, ' ');
+              previewRow.textContent = previewText + (entry.content.length > 50 ? '...' : '');
+              previewRow.style.cssText = 'margin-top: 4px; font-size: 11px; color: #999; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+              infoDiv.appendChild(previewRow);
+            }
+
+            div.append(checkbox, infoDiv);
             container.appendChild(div);
           });
+
+          if (visibleCount === 0) {
+            container.innerHTML = `<div style="color: #ddd; text-align: center; padding: 20px;">
+              没有可显示的条目<br>
+              <small style="color:#888;">总条目: ${totalCount}, 禁用: ${disabledCount}</small>
+            </div>`;
+          }
+
+          document.getElementById('sp-worldbook-status').textContent =
+            `📊 ${currentWorldbookName} [${currentMode === 'static' ? '静态' : '动态'}] - 显示 ${visibleCount}/${totalCount} (常驻: ${constantCount}, 禁用: ${disabledCount})`;
         }
 
         document.getElementById('sp-select-all').addEventListener('change', (e) => {
-          if (e.target.checked) document.querySelectorAll('#sp-entries-list input[type="checkbox"]').forEach(cb => { cb.checked = true; });
-          saveCurrentConfig();
-        });
-        document.getElementById('sp-deselect-all').addEventListener('change', (e) => {
-          document.querySelectorAll('#sp-entries-list input[type="checkbox"]').forEach(cb => { cb.checked = false; });
-          e.target.checked = false;
-          saveCurrentConfig();
+          if (e.target.checked) {
+            document.querySelectorAll('#sp-entries-list input[type="checkbox"][data-uid]').forEach(cb => { cb.checked = true; });
+            document.getElementById('sp-deselect-all').checked = false;
+          }
+          const checkedCount = document.querySelectorAll('#sp-entries-list input[type="checkbox"][data-uid]:checked').length;
+          document.getElementById('sp-worldbook-status').textContent = `已选择 ${checkedCount} 个条目`;
         });
 
-        async function searchWorldbook(isDynamic = false) {
-          currentWorldbookName = document.getElementById('sp-worldbook-input').value.trim();
-          if (!currentWorldbookName) return alert('请输入世界书名称');
-          currentMode = isDynamic ? 'dynamic' : 'static';
-          const selected = moduleWI.selected_world_info || [];
-          currentFileId = selected.find(wi => wi.toLowerCase().includes(currentWorldbookName.toLowerCase()));
-          if (!currentFileId) return alert(`未找到 "${currentWorldbookName}"`);
-          try {
-            const worldInfo = await moduleWI.loadWorldInfo(currentFileId);
-            currentEntries = worldInfo.entries || {};
+        document.getElementById('sp-deselect-all').addEventListener('change', (e) => {
+          document.querySelectorAll('#sp-entries-list input[type="checkbox"][data-uid]').forEach(cb => { cb.checked = false; });
+          document.getElementById('sp-select-all').checked = false;
+          e.target.checked = false;
+          document.getElementById('sp-worldbook-status').textContent = `已选择 0 个条目`;
+        });
+
+        document.getElementById('sp-show-disabled').addEventListener('change', (e) => {
+          showDisabled = e.target.checked;
+          if (Object.keys(currentEntries).length > 0) {
             const configKey = currentMode === 'static' ? STATIC_CONFIG_KEY : DYNAMIC_CONFIG_KEY;
             currentConfig = JSON.parse(localStorage.getItem(configKey) || '{}');
             const enabledUids = currentConfig[currentWorldbookName]?.enabledUids || [];
             renderEntries(currentEntries, enabledUids);
-            document.getElementById('sp-worldbook-status').textContent = `✅ ${currentMode} 加载成功`;
+          }
+        });
+
+        async function searchWorldbook(isDynamic = false) {
+          const inputEl = document.getElementById('sp-worldbook-input');
+          currentWorldbookName = inputEl ? inputEl.value.trim() : '';
+          if (!currentWorldbookName) return alert('请输入世界书名称');
+
+          currentMode = isDynamic ? 'dynamic' : 'static';
+          document.getElementById('sp-worldbook-status').textContent = '正在搜索...';
+
+          // 尝试获取所有可用的世界书列表
+          let allWorldBookNames = [];
+          if (Array.isArray(moduleWI.world_names)) {
+             allWorldBookNames = moduleWI.world_names;
+          } else {
+             const ctx = SillyTavern.getContext();
+             if (ctx.worldInfo && Array.isArray(ctx.worldInfo)) {
+                 allWorldBookNames = ctx.worldInfo.map(w => w.name || w);
+             }
+          }
+
+          if (allWorldBookNames.length === 0) {
+             const selected = moduleWI.selected_world_info || [];
+             const worldInfoData = moduleWI.world_info || {};
+             allWorldBookNames = [...selected, ...Object.keys(worldInfoData)];
+          }
+
+          currentFileId = allWorldBookNames.find(name => {
+            const n = name.toLowerCase();
+            const s = currentWorldbookName.toLowerCase();
+            return n === s || n.includes(s) || s.includes(n);
+          });
+
+          if (!currentFileId) {
+            document.getElementById('sp-worldbook-status').textContent = `❌ 未找到 "${currentWorldbookName}"`;
+            return;
+          }
+
+          try {
+            document.getElementById('sp-worldbook-status').textContent = `正在加载 "${currentFileId}"...`;
+
+            const worldInfo = await moduleWI.loadWorldInfo(currentFileId);
+            currentEntries = worldInfo.entries || worldInfo || {};
+
+            if (Object.keys(currentEntries).length === 0 && typeof worldInfo === 'object') {
+              const possibleEntries = Object.values(worldInfo).find(v => typeof v === 'object' && v !== null);
+              if (possibleEntries) {
+                currentEntries = possibleEntries;
+              }
+            }
+
+            const configKey = currentMode === 'static' ? STATIC_CONFIG_KEY : DYNAMIC_CONFIG_KEY;
+            currentConfig = JSON.parse(localStorage.getItem(configKey) || '{}');
+            const enabledUids = currentConfig[currentWorldbookName]?.enabledUids || [];
+
+            localStorage.setItem(LAST_WORLDBOOK_KEY, JSON.stringify({
+              worldbookName: currentWorldbookName,
+              fileId: currentFileId,
+              mode: currentMode
+            }));
+
+            renderEntries(currentEntries, enabledUids);
+            populateConfiguredBooks();
+
+            if (Object.keys(currentEntries).length === 0) {
+              document.getElementById('sp-worldbook-status').textContent = `⚠️ 世界书加载成功但没有条目`;
+            }
           } catch (e) {
+            console.error('[世界书] 加载失败:', e);
             document.getElementById('sp-worldbook-status').textContent = '❌ 加载失败: ' + e.message;
           }
         }
 
+        document.getElementById('sp-configured-books').addEventListener('change', async (e) => {
+          const bookName = e.target.value;
+          if (!bookName) return;
+
+          document.getElementById('sp-worldbook-input').value = bookName;
+
+          const staticConfig = JSON.parse(localStorage.getItem(STATIC_CONFIG_KEY) || '{}');
+          const dynamicConfig = JSON.parse(localStorage.getItem(DYNAMIC_CONFIG_KEY) || '{}');
+
+          if (staticConfig[bookName]) {
+            await searchWorldbook(false);
+          } else if (dynamicConfig[bookName]) {
+            await searchWorldbook(true);
+          }
+        });
+
         document.getElementById('sp-search-btn').addEventListener('click', () => searchWorldbook(false));
         document.getElementById('sp-robot-btn').addEventListener('click', () => searchWorldbook(true));
         document.getElementById('sp-save-config').addEventListener('click', saveCurrentConfig);
+
+        populateConfiguredBooks();
+
+        if (lastState.worldbookName && lastState.fileId && lastState.mode) {
+          setTimeout(() => {
+            searchWorldbook(lastState.mode === 'dynamic');
+          }, 100);
+        }
       }
 
       // ========== 获取聊天记录 ==========
@@ -995,7 +1568,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           if (!ctx || !Array.isArray(ctx.chat)) return [];
           const count = parseInt(localStorage.getItem('friendCircleChatCount') || 10, 10);
           const lastMessages = ctx.chat.slice(-count);
-          
+
           const regexListRaw = JSON.parse(localStorage.getItem('friendCircleRegexList') || '[]');
           const regexList = regexListRaw
             .filter(r => r.enabled)
@@ -1016,23 +1589,23 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               }
             })
             .filter(Boolean);
-          
+
           const textMessages = lastMessages.map(m => {
             let text = (m.mes || m.original_mes || "").trim();
             regexList.forEach(regex => { text = text.replace(regex, ''); });
             return text;
           }).filter(Boolean);
-          
+
           localStorage.setItem('cuttedLastMessages', JSON.stringify(textMessages));
           return textMessages;
         } catch (e) { return []; }
       }
 
-      // ========== 生成面板（新增日志功能）==========
+      // ========== 生成面板 ==========
       let autoMode = false, tuoguanMode = false, autoEventHandler = null, tuoguanEventHandler = null;
       let processedMessageIds = new Set(), contentClickHandler = null;
-      let lastSentMessages = null; // 🆕 保存最后发送的消息
-      let lastGeneratedOutput = ''; // 🆕 保存最后生成的输出
+      let lastSentMessages = null;
+      let lastGeneratedOutput = '';
       const AUTO_MODE_KEY = 'friendCircleAutoMode', TUOGUAN_MODE_KEY = 'friendCircleTuoguanMode';
 
       function getMessageId(msg) { return `${msg.send_date || ''}_${msg.mes ? msg.mes.substring(0, 50) : ''}_${msg.is_user}`; }
@@ -1076,35 +1649,33 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           return enabled[Math.floor(Math.random() * enabled.length)].text;
         }
 
-        // 🆕 格式化日志显示
         function formatMessagesLog(messages) {
           if (!messages || messages.length === 0) return '暂无发送记录';
-          
+
           let output = `═══════════════════════════════════\n`;
           output += `📨 发送给AI的完整内容 (${messages.length} 条消息)\n`;
           output += `═══════════════════════════════════\n\n`;
-          
+
           messages.forEach((msg, idx) => {
             const roleEmoji = msg.role === 'system' ? '⚙️' : msg.role === 'user' ? '👤' : '🤖';
             const roleName = msg.role === 'system' ? 'System' : msg.role === 'user' ? 'User' : 'Assistant';
-            
+
             output += `┌─── ${roleEmoji} [${idx + 1}] ${roleName} ───\n`;
             output += `│\n`;
-            
-            // 将内容按行分割并添加前缀
+
             const lines = msg.content.split('\n');
             lines.forEach(line => {
               output += `│ ${line}\n`;
             });
-            
+
             output += `│\n`;
             output += `└${'─'.repeat(40)}\n\n`;
           });
-          
+
           output += `═══════════════════════════════════\n`;
-          output += `📊 统计: System=${messages.filter(m=>m.role==='system').length}, User=${messages.filter(m=>m.role==='user').length}, Assistant=${messages.filter(m=>m.role==='assistant').length}\n`;
+          output += `📊 统计: System=${messages.filter(m => m.role === 'system').length}, User=${messages.filter(m => m.role === 'user').length}, Assistant=${messages.filter(m => m.role === 'assistant').length}\n`;
           output += `═══════════════════════════════════`;
-          
+
           return output;
         }
 
@@ -1134,7 +1705,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
                 const worldInfo = await moduleWI.loadWorldInfo(config.fileId);
                 config.enabledUids.forEach(uid => {
                   const entry = worldInfo.entries?.[uid];
-                  if (entry?.content) worldbookContent.push(`【${bookName} - ${entry.title || '未命名'}】\n${entry.content}`);
+                  if (entry?.content) worldbookContent.push(`【${bookName} - ${entry.title || entry.comment || '未命名'}】\n${entry.content}`);
                 });
               }
             }
@@ -1143,7 +1714,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
                 const worldInfo = await moduleWI.loadWorldInfo(config.fileId);
                 config.enabledUids.forEach(uid => {
                   const entry = worldInfo.entries?.[uid];
-                  if (entry?.content) worldbookContent.push(`【${bookName} - ${entry.title || '未命名'}】\n${entry.content}`);
+                  if (entry?.content) worldbookContent.push(`【${bookName} - ${entry.title || entry.comment || '未命名'}】\n${entry.content}`);
                 });
               }
             }
@@ -1156,7 +1727,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           if (replacedPrompts.length > 0) messages.push({ role: "system", content: `<Tasks>\n${replacedPrompts.join('\n')}\n\n${sysConfig.tasksWrapper}\n</Tasks>` });
           if (sysConfig.assistantPrefill?.trim()) messages.push({ role: "assistant", content: sysConfig.assistantPrefill });
 
-          // 🆕 保存发送的消息
           lastSentMessages = messages;
 
           try {
@@ -1168,15 +1738,14 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             const output = data.choices?.map(c => c.message?.content || '').join('\n') || '[未生成内容]';
-            
-            // 🆕 保存输出
+
             lastGeneratedOutput = output;
-            
+
             const outputEl = document.getElementById('sp-gen-output');
             const labelEl = document.getElementById('sp-output-label');
             if (outputEl) outputEl.textContent = output;
             if (labelEl) labelEl.textContent = '📤 生成输出:';
-            
+
             return output;
           } catch (e) {
             const outputEl = document.getElementById('sp-gen-output');
@@ -1266,45 +1835,41 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         if (localStorage.getItem(AUTO_MODE_KEY) === '1') toggleAutoMode(true);
         if (localStorage.getItem(TUOGUAN_MODE_KEY) === '1') toggleTuoguanMode(true);
 
-        // 🆕 用于切换显示模式
         let showingLog = false;
 
         contentClickHandler = async (e) => {
           const target = e.target;
-          
+
           if (target.id === 'sp-gen-now') {
             showingLog = false;
             try { await getLastMessages(); const cutted = await getLastMessages(); generateFriendCircle(cutted); } catch (err) { debugLog('生成异常', err.message); }
-          } 
-          
-          // 🆕 日志按钮
+          }
+
           else if (target.id === 'sp-gen-log') {
             const outputEl = document.getElementById('sp-gen-output');
             const labelEl = document.getElementById('sp-output-label');
             const logBtn = document.getElementById('sp-gen-log');
-            
+
             if (!showingLog) {
-              // 切换到日志视图
               showingLog = true;
               if (outputEl) outputEl.textContent = formatMessagesLog(lastSentMessages);
               if (labelEl) labelEl.textContent = '📋 发送日志 (点击"日志"返回):';
               if (logBtn) { logBtn.textContent = '📤输出'; logBtn.style.background = '#588254'; }
             } else {
-              // 切换回输出视图
               showingLog = false;
               if (outputEl) outputEl.textContent = lastGeneratedOutput || '暂无生成内容';
               if (labelEl) labelEl.textContent = '📤 生成输出:';
               if (logBtn) { logBtn.textContent = '📋日志'; logBtn.style.background = '#6B5B95'; }
             }
           }
-          
+
           else if (target.id === 'sp-gen-inject-input') {
             const texts = lastGeneratedOutput || document.getElementById('sp-gen-output')?.textContent.trim();
             if (!texts || showingLog) return alert('请先生成内容');
             const inputEl = document.getElementById('send_textarea');
             if (inputEl) { inputEl.value = texts; inputEl.dispatchEvent(new Event('input', { bubbles: true })); }
-          } 
-          
+          }
+
           else if (target.id === 'sp-gen-inject-chat') {
             const texts = lastGeneratedOutput || document.getElementById('sp-gen-output')?.textContent.trim();
             if (!texts || showingLog) return alert('请先生成内容');
@@ -1316,8 +1881,8 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             const aiMes = [...allMes].reverse().find(m => !m.classList.contains('user'));
             if (!aiMes) return alert('未找到DOM中的AI消息');
             simulateEditMessage(aiMes, lastAiMes.mes + '\n' + texts);
-          } 
-          
+          }
+
           else if (target.id === 'sp-gen-inject-swipe') {
             const texts = lastGeneratedOutput || document.getElementById('sp-gen-output')?.textContent.trim();
             if (!texts || showingLog) return alert('请先生成内容');
@@ -1325,12 +1890,12 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             if (inputEl) { inputEl.value = `/addswipe ${texts}`; inputEl.dispatchEvent(new Event('input', { bubbles: true })); }
             const sendBtn = document.getElementById('send_but');
             if (sendBtn) sendBtn.click();
-          } 
-          
+          }
+
           else if (target.id === 'sp-gen-auto') {
             toggleAutoMode();
-          } 
-          
+          }
+
           else if (target.id === 'sp-gen-tuoguan') {
             toggleTuoguanMode();
           }
