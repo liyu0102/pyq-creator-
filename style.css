@@ -1,21 +1,32 @@
+/* 🌟 悬浮球 */
 #star-fab {
   position: fixed;
   top: 30px;
-  right: 0px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
   font-size: 22px;
   cursor: pointer;
   z-index: 99999;
+  transition: transform 0.2s;
 }
 
+#star-fab:active {
+  transform: scale(0.9);
+}
+
+/* 🌟 主面板容器 */
 #star-panel {
   position: fixed;
   top: 10px;
   right: 10px;
   left: auto;
   width: 340px;
-  max-width: calc(100vw - 20px);
+  max-width: calc(100vw - 20px); /* 确保不超出屏幕 */
   max-height: 85vh;
-  background: #1e1e2e;
+  background: rgba(30, 30, 46, 0.95);
+  backdrop-filter: blur(5px);
   color: #fff;
   border: 1px solid #444;
   border-radius: 8px;
@@ -24,19 +35,31 @@
   z-index: 99998;
   box-sizing: border-box;
   flex-direction: column;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
 #star-panel.sp-visible {
   display: flex !important;
 }
 
-/* 手机全屏模式 - 通过JS添加这个class来启用 */
 #star-panel.sp-fullwidth {
   left: 5px !important;
   right: 5px !important;
   width: auto !important;
+  max-width: none !important;
 }
 
+/* 修复：确保输入框不撑开容器 */
+#star-panel input,
+#star-panel select,
+#star-panel textarea,
+#star-panel button {
+  box-sizing: border-box;
+  max-width: 100%;
+  outline: none;
+}
+
+/* 头部区域 */
 .sp-panel-header {
   display: flex;
   justify-content: space-between;
@@ -48,7 +71,8 @@
 }
 
 .sp-header-title {
-  font-size: 14px;
+  font-size: 1.1em;
+  font-weight: bold;
   color: #A3C956;
 }
 
@@ -60,16 +84,18 @@
 .sp-header-btn {
   background: transparent;
   border: none;
-  color: #fff;
+  color: #bbb;
   cursor: pointer;
   font-size: 16px;
   padding: 4px;
+  transition: color 0.2s;
 }
 
 .sp-header-btn:hover {
-  color: #A3C956;
+  color: #fff;
 }
 
+/* 按钮网格 */
 .sp-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -79,80 +105,103 @@
 }
 
 .sp-btn {
-  background: #333;
-  padding: 6px;
-  border-radius: 6px;
+  background: #3a3a4e;
+  padding: 8px 4px;
+  border-radius: 4px;
   cursor: pointer;
   text-align: center;
   font-size: inherit;
+  border: 1px solid #4a4a5e;
+  transition: background 0.2s;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sp-btn:hover {
-  background: #555;
+  background: #505066;
+  border-color: #A3C956;
 }
 
+.sp-btn:active {
+  background: #2a2a3e;
+}
+
+/* 内容区域 */
 .sp-subpanel {
-  background: #222;
+  background: rgba(0, 0, 0, 0.2);
   padding: 8px;
   border-radius: 6px;
-  min-height: 100px;
-  margin-bottom: 10px;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  margin-bottom: 8px;
+  border: 1px solid #333;
 }
 
+/* 调试区域 */
 .sp-debug {
   height: 60px;
   min-height: 60px;
   background: #111;
   border: 1px solid #333;
-  padding: 5px;
-  font-size: 12px;
+  border-radius: 4px;
+  padding: 6px;
+  font-size: 11px;
+  color: #888;
   overflow-y: auto;
   flex-shrink: 0;
+  word-break: break-all;
+  font-family: monospace;
 }
 
-.sp-output {
-  margin-top: 8px;
-  background: #111;
-  padding: 5px;
-  min-height: 60px;
-  border: 1px solid #333;
+/* 滚动条 */
+#star-panel ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+#star-panel ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+#star-panel ::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+#star-panel ::-webkit-scrollbar-thumb:hover {
+  background: #777;
 }
 
 /* 缩放等级 */
 .sp-scale-small { font-size: 12px !important; }
-.sp-scale-small .sp-btn { padding: 4px !important; }
-
 .sp-scale-normal { font-size: 14px !important; }
-
 .sp-scale-large { font-size: 16px !important; }
-.sp-scale-large .sp-btn { padding: 8px !important; }
-
 .sp-scale-xlarge { font-size: 18px !important; }
-.sp-scale-xlarge .sp-btn { padding: 10px !important; }
 
-/* 小屏幕基础优化（不强制宽度） */
+/* 响应式适配 */
 @media (max-width: 480px) {
-  .sp-grid {
-    gap: 4px;
+  #star-panel {
+    max-width: calc(100vw - 10px);
+    right: 5px;
+    padding: 8px;
   }
-  
-  .sp-btn {
-    padding: 8px 4px;
-    font-size: 12px;
-  }
+  .sp-grid { gap: 4px; }
+  .sp-btn { padding: 8px 2px; font-size: 0.9em; }
+  .sp-subpanel div[style*="display: flex"] { flex-wrap: wrap; }
+  /* 特殊处理：API配置里的flex不换行，防止图标掉下去 */
+  .sp-api-row { flex-wrap: nowrap !important; }
 }
 
 @media (max-width: 360px) {
   #star-panel {
-    padding: 6px;
-  }
-  
-  .sp-btn {
-    padding: 6px 2px;
-    font-size: 11px;
+    width: 100% !important;
+    right: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0;
   }
 }
