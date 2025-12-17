@@ -139,16 +139,11 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
       `;
       document.body.appendChild(panel);
 
-      // 应用保存的面板尺寸
       function applySavedPanelSize() {
         const savedHeight = localStorage.getItem('starPanelHeight');
         const savedWidth = localStorage.getItem('starPanelWidth');
         const fullWidthMode = localStorage.getItem('starPanelFullWidth') === '1';
-
-        if (savedHeight) {
-          panel.style.maxHeight = savedHeight + 'vh';
-        }
-
+        if (savedHeight) panel.style.maxHeight = savedHeight + 'vh';
         if (fullWidthMode) {
           panel.classList.add('sp-fullwidth');
         } else {
@@ -166,9 +161,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         if (localStorage.getItem('starPanelFullWidth') !== '1') {
           const maxWidth = window.innerWidth - 20;
           const currentWidth = parseInt(panel.style.width) || 340;
-          if (currentWidth > maxWidth) {
-            panel.style.width = maxWidth + 'px';
-          }
+          if (currentWidth > maxWidth) panel.style.width = maxWidth + 'px';
         }
       });
 
@@ -220,6 +213,28 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
 
       const content = panel.querySelector('#sp-content-area');
 
+      // ========== 排序辅助函数 ==========
+      // ST位置: 0=Before, 1=After, 2=Top, 3=Bottom, 4=Depth
+      const POS_LABELS = { 0: '前', 1: '后', 2: '顶', 3: '底', 4: '深' };
+      // 模拟ST的默认插入顺序：顶 -> 前 -> 后 -> 深 -> 底
+      const POS_WEIGHT = { 2: 0, 0: 1, 1: 2, 4: 3, 3: 4 };
+
+      function getSortInfo(entry, id) {
+        const pos = entry.position !== undefined ? parseInt(entry.position) : 1; // 默认1(后)
+        const order = entry.order ?? entry.position ?? parseInt(id) ?? 9999;
+        const weight = POS_WEIGHT[pos] !== undefined ? POS_WEIGHT[pos] : 99;
+        return { pos, order, weight };
+      }
+
+      function compareEntries(a, b) {
+        // 先按位置权重排序
+        if (a.sortInfo.weight !== b.sortInfo.weight) {
+          return a.sortInfo.weight - b.sortInfo.weight;
+        }
+        // 位置相同时，按order排序
+        return a.sortInfo.order - b.sortInfo.order;
+      }
+
       // ========== 界面设置面板 ==========
       function showSettingsPanel() {
         const content = document.getElementById('sp-content-area');
@@ -231,7 +246,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         content.innerHTML = `
         <div style="padding: 12px; background: #2a2a3e; border-radius: 8px;">
           <h3 style="color: #A3C956; margin-bottom: 16px;">⚙️ 界面设置</h3>
-
           <div style="margin-bottom: 12px;">
             <span style="color: #ddd;">界面缩放：</span>
             <select id="sp-scale-select" style="padding: 6px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; width: 100%; margin-top: 4px; box-sizing: border-box;">
@@ -241,7 +255,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               <option value="xlarge" ${currentScale === 'xlarge' ? 'selected' : ''}>超大</option>
             </select>
           </div>
-
           <div style="margin-bottom: 12px;">
             <span style="color: #ddd;">面板高度：</span>
             <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
@@ -249,14 +262,12 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               <span id="sp-height-value" style="color: #A3C956; min-width: 45px;">${localStorage.getItem('starPanelHeight') || '85'}%</span>
             </div>
           </div>
-
           <div style="margin-bottom: 12px; padding: 10px; background: #3a3a4e; border-radius: 6px;">
             <label style="display: flex; align-items: center; gap: 8px; color: #ddd; cursor: pointer;">
               <input type="checkbox" id="sp-fullwidth-toggle" ${fullWidthMode ? 'checked' : ''} style="width: 18px; height: 18px;">
               <span>📱 全屏宽度模式</span>
             </label>
           </div>
-
           <div id="sp-width-container" style="margin-bottom: 12px; ${fullWidthMode ? 'opacity: 0.5; pointer-events: none;' : ''}">
             <span style="color: #ddd;">面板宽度：</span>
             <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
@@ -264,7 +275,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               <span id="sp-width-value" style="color: #A3C956; min-width: 50px;">${currentWidth}px</span>
             </div>
           </div>
-
           <button id="sp-reset-settings" style="width: 100%; padding: 10px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px;">恢复默认设置</button>
         </div>
         `;
@@ -288,7 +298,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           const fullWidth = e.target.checked;
           localStorage.setItem('starPanelFullWidth', fullWidth ? '1' : '0');
           const widthContainer = document.getElementById('sp-width-container');
-
           if (fullWidth) {
             panel.classList.add('sp-fullwidth');
             widthContainer.style.opacity = '0.5';
@@ -306,9 +315,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           const width = e.target.value;
           document.getElementById('sp-width-value').textContent = width + 'px';
           localStorage.setItem('starPanelWidth', width);
-          if (localStorage.getItem('starPanelFullWidth') !== '1') {
-            panel.style.width = width + 'px';
-          }
+          if (localStorage.getItem('starPanelFullWidth') !== '1') panel.style.width = width + 'px';
         });
 
         document.getElementById('sp-reset-settings').addEventListener('click', () => {
@@ -329,9 +336,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         const content = document.getElementById("sp-content-area");
         const API_CONFIGS_KEY = 'friendCircleApiConfigs';
         let savedConfigs = [];
-        try {
-          savedConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY) || '[]');
-        } catch { savedConfigs = []; }
+        try { savedConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY) || '[]'); } catch { savedConfigs = []; }
 
         content.innerHTML = `
           <div style="padding: 12px; background: #4D4135; border-radius: 8px;">
@@ -359,19 +364,15 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               API Key:
               <input type="text" id="sp-api-key-input" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; margin-top: 4px; box-sizing: border-box;">
             </label>
-
-            <!-- 模型选择区域优化：整合为一行 -->
             <label style="color: #ddd; display: block; margin-bottom: 4px;">模型:</label>
             <div class="sp-api-row" style="display: flex; gap: 6px; margin-bottom: 8px; align-items: center;">
-              <div style="flex: 1; min-width: 0;"> <!-- min-width:0 防止flex子项溢出 -->
+              <div style="flex: 1; min-width: 0;">
                 <select id="sp-api-model-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #588254; background: #5B6262; color: #fff; box-sizing: border-box; display: block;"></select>
                 <input type="text" id="sp-api-manual-model" placeholder="输入模型ID，如 gpt-4" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #A3C956; background: #5B6262; color: #fff; box-sizing: border-box; display: none;">
               </div>
               <button id="sp-api-toggle-manual" title="切换：列表选择 / 手动输入" style="width: 34px; height: 34px; padding: 0; background: #6B5B95; color: white; border: none; border-radius: 4px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">✏️</button>
             </div>
-
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
-              <!-- 修改3: 保存当前 字体加粗 -->
               <button id="sp-api-save-btn" style="flex: 1; min-width: 80px; padding: 8px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">保存当前</button>
               <button id="sp-api-save-as-new" style="flex: 1; min-width: 80px; padding: 8px; background: #A3C956; color: #4D4135; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">存为新配置</button>
             </div>
@@ -387,7 +388,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         const manualModelInput = document.getElementById("sp-api-manual-model");
         const toggleBtn = document.getElementById("sp-api-toggle-manual");
         const savedConfigsSelect = document.getElementById("sp-api-saved-configs");
-
         let isManualMode = false;
 
         function populateSavedConfigs() {
@@ -413,14 +413,12 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             opt.textContent = m;
             modelSelect.appendChild(opt);
           });
-          // 尝试恢复选中状态
           if (savedModel) {
             let existing = Array.from(modelSelect.options).find(o => o.value === savedModel);
             if (existing) {
               existing.textContent = savedModel + " (当前)";
               modelSelect.value = savedModel;
             } else {
-              // 如果列表中没有当前模型，可能需要添加到列表或切换到手动模式
               const opt = document.createElement("option");
               opt.value = savedModel;
               opt.textContent = savedModel + " (当前)";
@@ -437,7 +435,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           try {
             const arr = JSON.parse(storedModelsRaw);
             if (Array.isArray(arr)) populateModelSelect(arr);
-          } catch { }
+          } catch {}
         } else if (savedModel) {
           const opt = document.createElement("option");
           opt.value = savedModel;
@@ -448,27 +446,20 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
 
         populateSavedConfigs();
 
-        // 切换逻辑优化
         toggleBtn.addEventListener("click", () => {
           isManualMode = !isManualMode;
           if (isManualMode) {
-            // 切换到手动输入模式
             modelSelect.style.display = "none";
             manualModelInput.style.display = "block";
-            toggleBtn.innerHTML = "📋"; // 变成列表图标
+            toggleBtn.innerHTML = "📋";
             toggleBtn.style.background = "#588254";
-            if (modelSelect.value) {
-              manualModelInput.value = modelSelect.value;
-            }
+            if (modelSelect.value) manualModelInput.value = modelSelect.value;
             manualModelInput.focus();
           } else {
-            // 切换回列表模式
             manualModelInput.style.display = "none";
             modelSelect.style.display = "block";
-            toggleBtn.innerHTML = "✏️"; // 变成铅笔图标
+            toggleBtn.innerHTML = "✏️";
             toggleBtn.style.background = "#6B5B95";
-
-            // 如果手动输入了内容，尝试同步回列表
             if (manualModelInput.value.trim()) {
               const manualValue = manualModelInput.value.trim();
               const exists = Array.from(modelSelect.options).some(o => o.value === manualValue);
@@ -497,7 +488,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           document.getElementById("sp-api-url-input").value = config.url || "";
           document.getElementById("sp-api-key-input").value = config.key || "";
           if (config.model) {
-            // 加载配置时，默认更新两个控件的值
             manualModelInput.value = config.model;
             const exists = Array.from(modelSelect.options).some(o => o.value === config.model);
             if (!exists) {
@@ -590,10 +580,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             if (ids.length === 0) throw new Error("未解析到模型");
             localStorage.setItem("independentApiModels", JSON.stringify(ids));
             populateModelSelect(ids);
-
-            // 刷新成功后，切回列表模式
             if (isManualMode) toggleBtn.click();
-
             document.getElementById("sp-api-status").textContent = `✅ 已拉取 ${ids.length} 个模型`;
           } catch (e) {
             document.getElementById("sp-api-status").textContent = "❌ 拉取失败: " + e.message + "\n💡 请点击「✏️」切换到手动输入模式";
@@ -601,7 +588,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         });
       }
 
-      // ========== 系统提示词配置 (修改：图标和标题颜色) ==========
+      // ========== 系统提示词配置 ==========
       function showSystemPromptConfig() {
         const content = document.getElementById('sp-content-area');
         const defaults = {
@@ -617,36 +604,27 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         const saved = JSON.parse(localStorage.getItem('friendCircleSystemPrompts') || '{}');
         const config = { ...defaults, ...saved };
 
-        // 修改1&2：标题颜色 #D87E5E，Assistant预填充前的小花颜色 #D87E5E
         content.innerHTML = `
         <div style="padding: 12px; background: #4D4135; border-radius: 8px;">
           <h3 style="color: #D87E5E; margin-bottom: 12px;">⚙️ 系统提示词</h3>
-
-          <!-- 主系统提示词 -->
           <div style="margin-bottom: 12px;">
             <label style="color: #ddd; display: block; margin-bottom: 4px;">
               <span style="color: #A3C956;">❖</span> 主系统提示词
             </label>
             <textarea id="sp-sys-main" rows="4" style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; resize: vertical; box-sizing: border-box; min-height: 80px; font-family: inherit; line-height: 1.5;">${config.systemMain}</textarea>
           </div>
-
-          <!-- 过渡提示词 -->
           <div style="margin-bottom: 12px;">
             <label style="color: #ddd; display: block; margin-bottom: 4px;">
               <span style="color: #A3C956;">❖</span> 过渡提示词
             </label>
             <textarea id="sp-sys-middle" rows="2" style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; resize: vertical; box-sizing: border-box; font-family: inherit; line-height: 1.5;">${config.systemMiddle}</textarea>
           </div>
-
-          <!-- 任务包装后缀 -->
           <div style="margin-bottom: 12px;">
             <label style="color: #ddd; display: block; margin-bottom: 4px;">
               <span style="color: #A3C956;">❖</span> 任务包装后缀
             </label>
             <textarea id="sp-sys-tasks" rows="2" style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; resize: vertical; box-sizing: border-box; font-family: inherit; line-height: 1.5;">${config.tasksWrapper}</textarea>
           </div>
-
-          <!-- Assistant预填充 -->
           <div style="margin-bottom: 12px;">
             <label style="color: #ddd; display: block; margin-bottom: 4px;">
               <span style="color: #D87E5E;">❖</span> Assistant预填充
@@ -654,14 +632,10 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             </label>
             <textarea id="sp-sys-prefill" rows="2" placeholder="留空表示不预填充..." style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px dashed #588254; resize: vertical; box-sizing: border-box; font-family: inherit; line-height: 1.5;">${config.assistantPrefill}</textarea>
           </div>
-
-          <!-- 按钮区域 -->
           <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
             <button id="sp-sys-save" style="flex: 1; min-width: 100px; padding: 8px; background: #A3C956; color: #4D4135; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">保存设定</button>
             <button id="sp-sys-reset" style="padding: 8px 16px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer;">恢复默认</button>
           </div>
-
-          <!-- 状态提示 -->
           <div id="sp-sys-status" style="margin-top: 8px; font-size: 12px; color: #A3C956;"></div>
         </div>
         `;
@@ -685,7 +659,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         });
       }
 
-      // ========== 提示词配置 (修改：内联编辑) ==========
+      // ========== 提示词配置 ==========
       function showPromptConfig() {
         content.innerHTML = `
           <div style="padding: 12px; background: #4D4135; border-radius: 8px;">
@@ -765,47 +739,35 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               }
             });
 
-            // 修改5：内联编辑逻辑
             const editBtn = document.createElement('button');
             editBtn.textContent = '✏️';
             editBtn.style.cssText = 'padding:4px 6px;background:#D87E5E;border:none;border-radius:3px;cursor:pointer;font-size:12px;';
             editBtn.addEventListener('click', () => {
-              // 临时清空当前条目的显示内容，替换为编辑框
               div.innerHTML = '';
-
               const editContainer = document.createElement('div');
               editContainer.style.cssText = 'display:flex; gap:5px; width:100%; padding:4px;';
-
               const textarea = document.createElement('textarea');
               textarea.value = p.text;
               textarea.style.cssText = 'flex:1; background:#444; color:#fff; border:1px solid #D87E5E; border-radius:4px; padding:4px; resize:vertical; min-height:40px; font-family:inherit;';
-
               const actionsDiv = document.createElement('div');
               actionsDiv.style.cssText = 'display:flex; flex-direction:column; gap:4px; justify-content:center;';
-
               const saveBtn = document.createElement('button');
               saveBtn.textContent = '✅';
               saveBtn.title = '保存';
               saveBtn.style.cssText = 'cursor:pointer; background:#588254; border:none; border-radius:3px; padding:4px; color:white;';
-
               const cancelBtn = document.createElement('button');
               cancelBtn.textContent = '🔙';
               cancelBtn.title = '取消';
               cancelBtn.style.cssText = 'cursor:pointer; background:#5B6262; border:none; border-radius:3px; padding:4px; color:white;';
-
               saveBtn.onclick = () => {
-                  const val = textarea.value.trim();
-                  if (val) {
-                      friendCirclePrompts[idx].text = val;
-                      localStorage.setItem(PROMPTS_KEY, JSON.stringify(friendCirclePrompts));
-                      renderPromptList();
-                  }
+                const val = textarea.value.trim();
+                if (val) {
+                  friendCirclePrompts[idx].text = val;
+                  localStorage.setItem(PROMPTS_KEY, JSON.stringify(friendCirclePrompts));
+                  renderPromptList();
+                }
               };
-
-              cancelBtn.onclick = () => {
-                   renderPromptList(); // 重新渲染列表以恢复原状
-              };
-
+              cancelBtn.onclick = () => { renderPromptList(); };
               actionsDiv.append(saveBtn, cancelBtn);
               editContainer.append(textarea, actionsDiv);
               div.appendChild(editContainer);
@@ -839,7 +801,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
 
             if (p.tags && p.tags.length > 0) {
               const tagsRow = document.createElement('div');
-              tagsRow.className = 'tags-row'; // 方便识别
               tagsRow.style.cssText = 'margin-left:20px;margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;';
               p.tags.forEach((t, tIdx) => {
                 const tagEl = document.createElement('span');
@@ -910,7 +871,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           randomPrompts.forEach((p, idx) => {
             const div = document.createElement('div');
             div.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:6px;border-bottom:1px solid #588254;padding-bottom:6px;flex-wrap:wrap;';
-
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = p.enabled || false;
@@ -918,11 +878,9 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               randomPrompts[idx].enabled = checkbox.checked;
               localStorage.setItem(RANDOM_PROMPTS_KEY, JSON.stringify(randomPrompts));
             });
-
             const span = document.createElement('span');
             span.textContent = p.text;
             span.style.cssText = 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ddd;font-size:0.9em;';
-
             const delBtn = document.createElement('button');
             delBtn.textContent = '❌';
             delBtn.style.cssText = 'padding:4px 6px;background:#D87E5E;border:none;border-radius:3px;cursor:pointer;font-size:12px;';
@@ -931,7 +889,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               localStorage.setItem(RANDOM_PROMPTS_KEY, JSON.stringify(randomPrompts));
               renderRandomPromptList();
             });
-
             div.append(checkbox, span, delBtn);
             container.appendChild(div);
           });
@@ -968,7 +925,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               <button id="sp-add-macro-btn" style="padding: 8px 12px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer;">添加</button>
             </div>
             <div id="sp-macro-list" style="max-height: 180px; overflow-y: auto; border: 1px solid #588254; padding: 8px; background: #5B6262; border-radius: 4px;"></div>
-            <!-- 修改4: 保存配置 字体加粗 -->
             <button id="sp-save-macros-btn" style="margin-top: 12px; padding: 10px; width: 100%; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">保存配置</button>
           </div>
         `;
@@ -992,7 +948,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           randomMacros.forEach((macro, idx) => {
             const div = document.createElement('div');
             div.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:4px;border-bottom:1px solid #588254;padding-bottom:4px;flex-wrap:wrap;';
-
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = macro.enabled !== false;
@@ -1000,15 +955,12 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               randomMacros[idx].enabled = checkbox.checked;
               localStorage.setItem(MACROS_KEY, JSON.stringify(randomMacros));
             });
-
             const nameSpan = document.createElement('span');
             nameSpan.textContent = `{{${macro.name}}}`;
             nameSpan.style.cssText = 'font-weight:bold;color:#A3C956;font-size:12px;';
-
             const rangeSpan = document.createElement('span');
             rangeSpan.textContent = `[${macro.min}~${macro.max}]`;
             rangeSpan.style.cssText = 'color:#ddd;font-size:11px;flex:1;';
-
             const delBtn = document.createElement('button');
             delBtn.textContent = '❌';
             delBtn.style.cssText = 'padding:2px 6px;font-size:12px;background:#D87E5E;border:none;border-radius:3px;cursor:pointer;';
@@ -1017,7 +969,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               localStorage.setItem(MACROS_KEY, JSON.stringify(randomMacros));
               renderMacroList();
             });
-
             div.append(checkbox, nameSpan, rangeSpan, delBtn);
             container.appendChild(div);
           });
@@ -1088,7 +1039,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           list.forEach((item, idx) => {
             const div = document.createElement('div');
             div.style.cssText = 'display:flex;align-items:center;margin-bottom:4px;gap:4px;border-bottom:1px solid #588254;padding-bottom:4px;flex-wrap:wrap;';
-
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = item.enabled;
@@ -1096,11 +1046,9 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               list[idx].enabled = checkbox.checked;
               localStorage.setItem('friendCircleRegexList', JSON.stringify(list));
             });
-
             const text = document.createElement('span');
             text.textContent = item.pattern;
             text.style.cssText = 'flex:1;word-break:break-all;color:#ddd;font-size:12px;min-width:0;';
-
             const delBtn = document.createElement('button');
             delBtn.textContent = '删除';
             delBtn.style.cssText = 'padding:4px 8px;background:#D87E5E;color:white;border:none;border-radius:3px;cursor:pointer;font-size:12px;';
@@ -1109,7 +1057,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               localStorage.setItem('friendCircleRegexList', JSON.stringify(list));
               loadRegexList();
             });
-
             div.append(checkbox, text, delBtn);
             regexListContainer.appendChild(div);
           });
@@ -1128,18 +1075,16 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         loadRegexList();
       }
 
-      // ========== 世界书配置 (隐藏调试信息) ==========
+      // ========== 世界书配置 ==========
       async function showWorldbookPanel() {
         const STATIC_CONFIG_KEY = 'friendCircleStaticConfig';
         const DYNAMIC_CONFIG_KEY = 'friendCircleDynamicConfig';
         const LAST_WORLDBOOK_KEY = 'friendCircleLastWorldbook';
-
         const lastState = JSON.parse(localStorage.getItem(LAST_WORLDBOOK_KEY) || '{}');
 
         content.innerHTML = `
         <div style="padding: 12px; background: #4D4135; border-radius: 8px;">
           <h3 style="color: #A3C956; margin-bottom: 12px;">📚 世界书配置</h3>
-
           <div style="display: flex; gap: 8px; margin-bottom: 12px;">
             <div style="flex: 1;">
               <label style="color: #ddd; display: block; margin-bottom: 4px;">📁 已配置的世界书:</label>
@@ -1151,7 +1096,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               <button id="sp-delete-book-config" title="删除当前选中的配置" style="padding: 6px 10px; height: 32px; background: #D87E5E; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️</button>
             </div>
           </div>
-
           <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
             <input type="text" id="sp-worldbook-input" placeholder="输入世界书名称" value="${lastState.worldbookName || ''}" style="flex: 1; min-width: 120px; padding: 6px 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; box-sizing: border-box;">
             <button id="sp-search-btn" style="padding: 6px 10px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer;">🔎静态</button>
@@ -1163,7 +1107,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             <label style="color: #ddd;"><input type="checkbox" id="sp-show-disabled"> 显示禁用条目</label>
           </div>
           <div id="sp-entries-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #588254; padding: 8px; background: #5B6262; border-radius: 4px;">
-            <div style="color: #ddd; text-align: center;">点击搜索加载条目，或从上方选择已配置的世界书</div>
+            <div style="color: #ddd; text-align: center;">点击搜索加载条目</div>
           </div>
           <button id="sp-save-config" style="margin-top: 12px; padding: 8px; width: 100%; background: #A3C956; color: #4D4135; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">💾 保存配置</button>
           <div id="sp-worldbook-status" style="margin-top: 8px; font-size: 12px; color: #A3C956;"></div>
@@ -1178,9 +1122,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         let showDisabled = false;
 
         let moduleWI;
-        try {
-          moduleWI = await import('/scripts/world-info.js');
-        } catch (e) {
+        try { moduleWI = await import('/scripts/world-info.js'); } catch (e) {
           document.getElementById('sp-worldbook-status').textContent = '❌ world-info.js 加载失败: ' + e.message;
           return;
         }
@@ -1188,111 +1130,69 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         function populateConfiguredBooks() {
           const select = document.getElementById('sp-configured-books');
           select.innerHTML = '<option value="">-- 选择已配置的世界书 --</option>';
-
           const staticConfig = JSON.parse(localStorage.getItem(STATIC_CONFIG_KEY) || '{}');
           const dynamicConfig = JSON.parse(localStorage.getItem(DYNAMIC_CONFIG_KEY) || '{}');
-
           const allBooks = new Set([...Object.keys(staticConfig), ...Object.keys(dynamicConfig)]);
-
           allBooks.forEach(bookName => {
             const staticCount = staticConfig[bookName]?.enabledUids?.length || 0;
             const dynamicCount = dynamicConfig[bookName]?.enabledUids?.length || 0;
-
             const opt = document.createElement('option');
             opt.value = bookName;
-
             let label = bookName;
             const parts = [];
             if (staticCount > 0) parts.push(`静态:${staticCount}`);
             if (dynamicCount > 0) parts.push(`动态:${dynamicCount}`);
             if (parts.length > 0) label += ` (${parts.join(', ')})`;
-
             opt.textContent = label;
-
-            if (bookName === currentWorldbookName) {
-              opt.selected = true;
-            }
-
+            if (bookName === currentWorldbookName) opt.selected = true;
             select.appendChild(opt);
           });
         }
 
-        // 删除配置按钮逻辑
         document.getElementById('sp-delete-book-config').addEventListener('click', () => {
           const select = document.getElementById('sp-configured-books');
           const bookName = select.value;
-          if (!bookName) return alert('请先在左侧选择一个已配置的世界书');
-
-          if (!confirm(`确定要删除 "${bookName}" 的配置记录吗？\n(这不会删除世界书文件本身)`)) return;
-
+          if (!bookName) return alert('请先选择一个已配置的世界书');
+          if (!confirm(`确定删除 "${bookName}" 的配置？`)) return;
           const staticConfig = JSON.parse(localStorage.getItem(STATIC_CONFIG_KEY) || '{}');
           const dynamicConfig = JSON.parse(localStorage.getItem(DYNAMIC_CONFIG_KEY) || '{}');
-
           if (staticConfig[bookName]) delete staticConfig[bookName];
           if (dynamicConfig[bookName]) delete dynamicConfig[bookName];
-
           localStorage.setItem(STATIC_CONFIG_KEY, JSON.stringify(staticConfig));
           localStorage.setItem(DYNAMIC_CONFIG_KEY, JSON.stringify(dynamicConfig));
-
-          // 清空当前视图
+          localStorage.removeItem(LAST_WORLDBOOK_KEY);
           document.getElementById('sp-entries-list').innerHTML = '<div style="color: #ddd; text-align: center;">配置已删除</div>';
           document.getElementById('sp-worldbook-status').textContent = '✅ 配置已删除';
           document.getElementById('sp-worldbook-input').value = '';
           currentWorldbookName = '';
           currentFileId = '';
           currentEntries = {};
-
           populateConfiguredBooks();
         });
 
         function getEntryDisplayName(entry, id) {
-          let name = '';
-          if (entry.comment && entry.comment.trim()) {
-            name = entry.comment.trim();
-          } else if (entry.title && entry.title.trim()) {
-            name = entry.title.trim();
-          } else if (entry.name && entry.name.trim()) {
-            name = entry.name.trim();
-          } else if (entry.key) {
-            if (Array.isArray(entry.key)) {
-              name = entry.key.filter(k => k && k.trim()).join(', ');
-            } else if (typeof entry.key === 'string' && entry.key.trim()) {
-              name = entry.key.trim();
-            }
-          } else if (entry.keys && Array.isArray(entry.keys)) {
-            name = entry.keys.filter(k => k && k.trim()).join(', ');
-          } else if (entry.keyword && entry.keyword.trim()) {
-            name = entry.keyword.trim();
-          } else if (entry.uid !== undefined) {
-            name = `条目 #${entry.uid}`;
-          } else {
-            name = `条目 #${id}`;
+          if (entry.comment && entry.comment.trim()) return entry.comment.trim();
+          if (entry.title && entry.title.trim()) return entry.title.trim();
+          if (entry.name && entry.name.trim()) return entry.name.trim();
+          if (entry.key) {
+            if (Array.isArray(entry.key)) return entry.key.filter(k => k && k.trim()).join(', ') || `条目 #${id}`;
+            if (typeof entry.key === 'string' && entry.key.trim()) return entry.key.trim();
           }
-          return name || `未命名 #${id}`;
+          return `条目 #${id}`;
         }
 
         function getEntryKeys(entry) {
           let keys = [];
           if (entry.key) {
-            if (Array.isArray(entry.key)) {
-              keys = entry.key.filter(k => k && k.trim());
-            } else if (typeof entry.key === 'string' && entry.key.trim()) {
-              keys = entry.key.split(',').map(k => k.trim()).filter(Boolean);
-            }
+            if (Array.isArray(entry.key)) keys = entry.key.filter(k => k && k.trim());
+            else if (typeof entry.key === 'string' && entry.key.trim()) keys = entry.key.split(',').map(k => k.trim()).filter(Boolean);
           }
-          if (entry.keys && Array.isArray(entry.keys)) {
-            keys = keys.concat(entry.keys.filter(k => k && k.trim()));
-          }
+          if (entry.keys && Array.isArray(entry.keys)) keys = keys.concat(entry.keys.filter(k => k && k.trim()));
           return [...new Set(keys)];
         }
 
-        function isConstant(entry) {
-          return entry.constant === true || entry.constant === 1 || entry.alwaysActive === true;
-        }
-
-        function isDisabled(entry) {
-          return entry.disable === true || entry.disabled === true || entry.enabled === false;
-        }
+        function isConstant(entry) { return entry.constant === true || entry.constant === 1 || entry.alwaysActive === true; }
+        function isDisabled(entry) { return entry.disable === true || entry.disabled === true || entry.enabled === false; }
 
         function saveCurrentConfig() {
           if (!currentWorldbookName || !currentMode) {
@@ -1300,19 +1200,11 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             return;
           }
           const configKey = currentMode === 'static' ? STATIC_CONFIG_KEY : DYNAMIC_CONFIG_KEY;
-          const checkedUids = Array.from(document.querySelectorAll('#sp-entries-list input[type="checkbox"][data-uid]:checked'))
-            .map(cb => cb.dataset.uid);
-
+          const checkedUids = Array.from(document.querySelectorAll('#sp-entries-list input[type="checkbox"][data-uid]:checked')).map(cb => cb.dataset.uid);
           currentConfig = JSON.parse(localStorage.getItem(configKey) || '{}');
           currentConfig[currentWorldbookName] = { fileId: currentFileId, enabledUids: checkedUids };
           localStorage.setItem(configKey, JSON.stringify(currentConfig));
-
-          localStorage.setItem(LAST_WORLDBOOK_KEY, JSON.stringify({
-            worldbookName: currentWorldbookName,
-            fileId: currentFileId,
-            mode: currentMode
-          }));
-
+          localStorage.setItem(LAST_WORLDBOOK_KEY, JSON.stringify({ worldbookName: currentWorldbookName, fileId: currentFileId, mode: currentMode }));
           document.getElementById('sp-worldbook-status').textContent = `✅ 已保存 ${checkedUids.length} 个条目到 ${currentMode === 'static' ? '静态' : '动态'} 配置`;
           populateConfiguredBooks();
         }
@@ -1320,28 +1212,26 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         function renderEntries(entries, enabledUids = []) {
           const container = document.getElementById('sp-entries-list');
           container.innerHTML = '';
+          const entryArray = Object.entries(entries).map(([id, entry]) => ({
+            id,
+            entry,
+            sortInfo: getSortInfo(entry, id)
+          }));
 
-          const entryKeys = Object.keys(entries);
-          let visibleCount = 0;
-          let totalCount = entryKeys.length;
-          let disabledCount = 0;
-          let constantCount = 0;
+          entryArray.sort(compareEntries);
 
-          entryKeys.forEach(id => {
-            const entry = entries[id];
+          let visibleCount = 0, totalCount = entryArray.length, disabledCount = 0, constantCount = 0;
+
+          entryArray.forEach(({ id, entry, sortInfo }) => {
             const disabled = isDisabled(entry);
             const constant = isConstant(entry);
-
             if (disabled) disabledCount++;
             if (constant) constantCount++;
-
             if (disabled && !showDisabled) return;
-
             visibleCount++;
 
             const div = document.createElement('div');
             div.style.cssText = `display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;padding:6px;border-bottom:1px solid #588254;${disabled ? 'opacity:0.5;' : ''}`;
-
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.dataset.uid = id;
@@ -1349,47 +1239,31 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             checkbox.style.cssText = 'margin-top: 2px; flex-shrink: 0;';
             checkbox.addEventListener('change', () => {
               const checkedCount = document.querySelectorAll('#sp-entries-list input[type="checkbox"][data-uid]:checked').length;
-              document.getElementById('sp-worldbook-status').textContent = `已选择 ${checkedCount} 个条目 (${currentMode === 'static' ? '静态' : '动态'}模式)`;
+              document.getElementById('sp-worldbook-status').textContent = `已选择 ${checkedCount} 个条目`;
             });
 
             const infoDiv = document.createElement('div');
             infoDiv.style.cssText = 'flex: 1; min-width: 0;';
-
             const titleRow = document.createElement('div');
             titleRow.style.cssText = 'display: flex; align-items: center; gap: 6px; flex-wrap: wrap;';
 
+            // 显示 [位置:顺序] 标签
+            const orderBadge = document.createElement('span');
+            const posLabel = POS_LABELS[sortInfo.pos] || '?';
+            orderBadge.textContent = `[${posLabel}:${sortInfo.order}]`;
+            orderBadge.title = `位置: ${posLabel}, 顺序: ${sortInfo.order}, ID: ${id}`;
+            orderBadge.style.cssText = 'font-size: 10px; color: #ccc; background: #444; padding: 1px 4px; border-radius: 3px; font-family: monospace;';
+
             const badges = document.createElement('span');
             badges.style.cssText = 'display: flex; gap: 4px; flex-shrink: 0;';
-
-            if (constant) {
-              const constBadge = document.createElement('span');
-              constBadge.textContent = '📌';
-              constBadge.title = '常驻条目';
-              constBadge.style.cssText = 'font-size: 12px;';
-              badges.appendChild(constBadge);
-            }
-
-            if (disabled) {
-              const disableBadge = document.createElement('span');
-              disableBadge.textContent = '🚫';
-              disableBadge.title = '已禁用';
-              disableBadge.style.cssText = 'font-size: 12px;';
-              badges.appendChild(disableBadge);
-            }
-
+            if (constant) { const b = document.createElement('span'); b.textContent = '📌'; b.title = '常驻'; b.style.fontSize = '12px'; badges.appendChild(b); }
+            if (disabled) { const b = document.createElement('span'); b.textContent = '🚫'; b.title = '已禁用'; b.style.fontSize = '12px'; badges.appendChild(b); }
             const keys = getEntryKeys(entry);
-            if (keys.length > 0 && !constant) {
-              const keyBadge = document.createElement('span');
-              keyBadge.textContent = '🔑';
-              keyBadge.title = '关键词触发';
-              keyBadge.style.cssText = 'font-size: 12px;';
-              badges.appendChild(keyBadge);
-            }
-
+            if (keys.length > 0 && !constant) { const b = document.createElement('span'); b.textContent = '🔑'; b.title = '关键词触发'; b.style.fontSize = '12px'; badges.appendChild(b); }
             const titleSpan = document.createElement('strong');
             titleSpan.textContent = getEntryDisplayName(entry, id);
             titleSpan.style.cssText = 'color:#A3C956;font-size:13px;word-break:break-word;';
-
+            titleRow.appendChild(orderBadge);
             titleRow.appendChild(badges);
             titleRow.appendChild(titleSpan);
             infoDiv.appendChild(titleRow);
@@ -1419,20 +1293,12 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               previewRow.style.cssText = 'margin-top: 4px; font-size: 11px; color: #999; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
               infoDiv.appendChild(previewRow);
             }
-
             div.append(checkbox, infoDiv);
             container.appendChild(div);
           });
 
-          if (visibleCount === 0) {
-            container.innerHTML = `<div style="color: #ddd; text-align: center; padding: 20px;">
-              没有可显示的条目<br>
-              <small style="color:#888;">总条目: ${totalCount}, 禁用: ${disabledCount}</small>
-            </div>`;
-          }
-
-          document.getElementById('sp-worldbook-status').textContent =
-            `📊 ${currentWorldbookName} [${currentMode === 'static' ? '静态' : '动态'}] - 显示 ${visibleCount}/${totalCount} (常驻: ${constantCount}, 禁用: ${disabledCount})`;
+          if (visibleCount === 0) container.innerHTML = `<div style="color: #ddd; text-align: center; padding: 20px;">没有可显示的条目</div>`;
+          document.getElementById('sp-worldbook-status').textContent = `📊 ${currentWorldbookName} [${currentMode === 'static' ? '静态' : '动态'}] - 显示 ${visibleCount}/${totalCount}`;
         }
 
         document.getElementById('sp-select-all').addEventListener('change', (e) => {
@@ -1440,15 +1306,12 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             document.querySelectorAll('#sp-entries-list input[type="checkbox"][data-uid]').forEach(cb => { cb.checked = true; });
             document.getElementById('sp-deselect-all').checked = false;
           }
-          const checkedCount = document.querySelectorAll('#sp-entries-list input[type="checkbox"][data-uid]:checked').length;
-          document.getElementById('sp-worldbook-status').textContent = `已选择 ${checkedCount} 个条目`;
         });
 
         document.getElementById('sp-deselect-all').addEventListener('change', (e) => {
           document.querySelectorAll('#sp-entries-list input[type="checkbox"][data-uid]').forEach(cb => { cb.checked = false; });
           document.getElementById('sp-select-all').checked = false;
           e.target.checked = false;
-          document.getElementById('sp-worldbook-status').textContent = `已选择 0 个条目`;
         });
 
         document.getElementById('sp-show-disabled').addEventListener('change', (e) => {
@@ -1465,25 +1328,19 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           const inputEl = document.getElementById('sp-worldbook-input');
           currentWorldbookName = inputEl ? inputEl.value.trim() : '';
           if (!currentWorldbookName) return alert('请输入世界书名称');
-
           currentMode = isDynamic ? 'dynamic' : 'static';
           document.getElementById('sp-worldbook-status').textContent = '正在搜索...';
 
-          // 尝试获取所有可用的世界书列表
           let allWorldBookNames = [];
-          if (Array.isArray(moduleWI.world_names)) {
-             allWorldBookNames = moduleWI.world_names;
-          } else {
-             const ctx = SillyTavern.getContext();
-             if (ctx.worldInfo && Array.isArray(ctx.worldInfo)) {
-                 allWorldBookNames = ctx.worldInfo.map(w => w.name || w);
-             }
+          if (Array.isArray(moduleWI.world_names)) allWorldBookNames = moduleWI.world_names;
+          else {
+            const ctx = SillyTavern.getContext();
+            if (ctx.worldInfo && Array.isArray(ctx.worldInfo)) allWorldBookNames = ctx.worldInfo.map(w => w.name || w);
           }
-
           if (allWorldBookNames.length === 0) {
-             const selected = moduleWI.selected_world_info || [];
-             const worldInfoData = moduleWI.world_info || {};
-             allWorldBookNames = [...selected, ...Object.keys(worldInfoData)];
+            const selected = moduleWI.selected_world_info || [];
+            const worldInfoData = moduleWI.world_info || {};
+            allWorldBookNames = [...selected, ...Object.keys(worldInfoData)];
           }
 
           currentFileId = allWorldBookNames.find(name => {
@@ -1499,33 +1356,18 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
 
           try {
             document.getElementById('sp-worldbook-status').textContent = `正在加载 "${currentFileId}"...`;
-
             const worldInfo = await moduleWI.loadWorldInfo(currentFileId);
             currentEntries = worldInfo.entries || worldInfo || {};
-
             if (Object.keys(currentEntries).length === 0 && typeof worldInfo === 'object') {
               const possibleEntries = Object.values(worldInfo).find(v => typeof v === 'object' && v !== null);
-              if (possibleEntries) {
-                currentEntries = possibleEntries;
-              }
+              if (possibleEntries) currentEntries = possibleEntries;
             }
-
             const configKey = currentMode === 'static' ? STATIC_CONFIG_KEY : DYNAMIC_CONFIG_KEY;
             currentConfig = JSON.parse(localStorage.getItem(configKey) || '{}');
             const enabledUids = currentConfig[currentWorldbookName]?.enabledUids || [];
-
-            localStorage.setItem(LAST_WORLDBOOK_KEY, JSON.stringify({
-              worldbookName: currentWorldbookName,
-              fileId: currentFileId,
-              mode: currentMode
-            }));
-
+            localStorage.setItem(LAST_WORLDBOOK_KEY, JSON.stringify({ worldbookName: currentWorldbookName, fileId: currentFileId, mode: currentMode }));
             renderEntries(currentEntries, enabledUids);
             populateConfiguredBooks();
-
-            if (Object.keys(currentEntries).length === 0) {
-              document.getElementById('sp-worldbook-status').textContent = `⚠️ 世界书加载成功但没有条目`;
-            }
           } catch (e) {
             console.error('[世界书] 加载失败:', e);
             document.getElementById('sp-worldbook-status').textContent = '❌ 加载失败: ' + e.message;
@@ -1535,29 +1377,20 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         document.getElementById('sp-configured-books').addEventListener('change', async (e) => {
           const bookName = e.target.value;
           if (!bookName) return;
-
           document.getElementById('sp-worldbook-input').value = bookName;
-
           const staticConfig = JSON.parse(localStorage.getItem(STATIC_CONFIG_KEY) || '{}');
           const dynamicConfig = JSON.parse(localStorage.getItem(DYNAMIC_CONFIG_KEY) || '{}');
-
-          if (staticConfig[bookName]) {
-            await searchWorldbook(false);
-          } else if (dynamicConfig[bookName]) {
-            await searchWorldbook(true);
-          }
+          if (staticConfig[bookName]) await searchWorldbook(false);
+          else if (dynamicConfig[bookName]) await searchWorldbook(true);
         });
 
         document.getElementById('sp-search-btn').addEventListener('click', () => searchWorldbook(false));
         document.getElementById('sp-robot-btn').addEventListener('click', () => searchWorldbook(true));
         document.getElementById('sp-save-config').addEventListener('click', saveCurrentConfig);
-
         populateConfiguredBooks();
 
         if (lastState.worldbookName && lastState.fileId && lastState.mode) {
-          setTimeout(() => {
-            searchWorldbook(lastState.mode === 'dynamic');
-          }, 100);
+          setTimeout(() => { searchWorldbook(lastState.mode === 'dynamic'); }, 100);
         }
       }
 
@@ -1568,44 +1401,31 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           if (!ctx || !Array.isArray(ctx.chat)) return [];
           const count = parseInt(localStorage.getItem('friendCircleChatCount') || 10, 10);
           const lastMessages = ctx.chat.slice(-count);
-
           const regexListRaw = JSON.parse(localStorage.getItem('friendCircleRegexList') || '[]');
-          const regexList = regexListRaw
-            .filter(r => r.enabled)
-            .map(r => {
-              try {
-                const pattern = r.pattern.trim();
-                if (/^\w+$/.test(pattern)) {
-                  return new RegExp(`<${pattern}>[\\s\\S]*?<\\/${pattern}>`, 'g');
-                }
-                const openTag = pattern.match(/^<(\w+)>/);
-                const closeTag = pattern.match(/<\/(\w+)>$/);
-                if (openTag && closeTag && openTag[1] === closeTag[1]) {
-                  return new RegExp(`<${openTag[1]}>[\\s\\S]*?<\\/${openTag[1]}>`, 'g');
-                }
-                return new RegExp(pattern, 'g');
-              } catch (e) {
-                return null;
-              }
-            })
-            .filter(Boolean);
-
+          const regexList = regexListRaw.filter(r => r.enabled).map(r => {
+            try {
+              const pattern = r.pattern.trim();
+              if (/^\w+$/.test(pattern)) return new RegExp(`<${pattern}>[\\s\\S]*?<\\/${pattern}>`, 'g');
+              const openTag = pattern.match(/^<(\w+)>/);
+              const closeTag = pattern.match(/<\/(\w+)>$/);
+              if (openTag && closeTag && openTag[1] === closeTag[1]) return new RegExp(`<${openTag[1]}>[\\s\\S]*?<\\/${openTag[1]}>`, 'g');
+              return new RegExp(pattern, 'g');
+            } catch { return null; }
+          }).filter(Boolean);
           const textMessages = lastMessages.map(m => {
             let text = (m.mes || m.original_mes || "").trim();
             regexList.forEach(regex => { text = text.replace(regex, ''); });
             return text;
           }).filter(Boolean);
-
           localStorage.setItem('cuttedLastMessages', JSON.stringify(textMessages));
           return textMessages;
-        } catch (e) { return []; }
+        } catch { return []; }
       }
 
       // ========== 生成面板 ==========
       let autoMode = false, tuoguanMode = false, autoEventHandler = null, tuoguanEventHandler = null;
       let processedMessageIds = new Set(), contentClickHandler = null;
-      let lastSentMessages = null;
-      let lastGeneratedOutput = '';
+      let lastSentMessages = null, lastGeneratedOutput = '';
       const AUTO_MODE_KEY = 'friendCircleAutoMode', TUOGUAN_MODE_KEY = 'friendCircleTuoguanMode';
 
       function getMessageId(msg) { return `${msg.send_date || ''}_${msg.mes ? msg.mes.substring(0, 50) : ''}_${msg.is_user}`; }
@@ -1640,7 +1460,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         `;
 
         const PROMPTS_KEY = 'friendCircleUserPrompts', RANDOM_PROMPTS_KEY = 'friendCircleRandomPrompts';
-
         function loadUserPrompts() { try { return JSON.parse(localStorage.getItem(PROMPTS_KEY) || '[]'); } catch { return []; } }
         function loadRandomPrompts() { try { return JSON.parse(localStorage.getItem(RANDOM_PROMPTS_KEY) || '[]'); } catch { return []; } }
         function getRandomPrompt() {
@@ -1651,31 +1470,15 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
 
         function formatMessagesLog(messages) {
           if (!messages || messages.length === 0) return '暂无发送记录';
-
-          let output = `═══════════════════════════════════\n`;
-          output += `📨 发送给AI的完整内容 (${messages.length} 条消息)\n`;
-          output += `═══════════════════════════════════\n\n`;
-
+          let output = `═══════════════════════════════════\n📨 发送给AI的完整内容 (${messages.length} 条消息)\n═══════════════════════════════════\n\n`;
           messages.forEach((msg, idx) => {
             const roleEmoji = msg.role === 'system' ? '⚙️' : msg.role === 'user' ? '👤' : '🤖';
             const roleName = msg.role === 'system' ? 'System' : msg.role === 'user' ? 'User' : 'Assistant';
-
-            output += `┌─── ${roleEmoji} [${idx + 1}] ${roleName} ───\n`;
-            output += `│\n`;
-
-            const lines = msg.content.split('\n');
-            lines.forEach(line => {
-              output += `│ ${line}\n`;
-            });
-
-            output += `│\n`;
-            output += `└${'─'.repeat(40)}\n\n`;
+            output += `┌─── ${roleEmoji} [${idx + 1}] ${roleName} ───\n│\n`;
+            msg.content.split('\n').forEach(line => { output += `│ ${line}\n`; });
+            output += `│\n└${'─'.repeat(40)}\n\n`;
           });
-
-          output += `═══════════════════════════════════\n`;
-          output += `📊 统计: System=${messages.filter(m => m.role === 'system').length}, User=${messages.filter(m => m.role === 'user').length}, Assistant=${messages.filter(m => m.role === 'assistant').length}\n`;
-          output += `═══════════════════════════════════`;
-
+          output += `═══════════════════════════════════\n📊 统计: System=${messages.filter(m => m.role === 'system').length}, User=${messages.filter(m => m.role === 'user').length}, Assistant=${messages.filter(m => m.role === 'assistant').length}\n═══════════════════════════════════`;
           return output;
         }
 
@@ -1690,7 +1493,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             assistantPrefill: ``
           };
           const sysConfig = { ...sysDefaults, ...JSON.parse(localStorage.getItem('friendCircleSystemPrompts') || '{}') };
-
           const enabledPrompts = loadUserPrompts().filter(p => p.enabled).map(p => p.text);
           const randomPrompt = getRandomPrompt();
           const allPrompts = [...enabledPrompts];
@@ -1700,25 +1502,59 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           let worldbookContent = [];
           try {
             const moduleWI = await import('/scripts/world-info.js');
-            for (const [bookName, config] of Object.entries(JSON.parse(localStorage.getItem('friendCircleStaticConfig') || '{}'))) {
+            const lastState = JSON.parse(localStorage.getItem('friendCircleLastWorldbook') || '{}');
+            const currentBookName = lastState.worldbookName;
+            const staticConfig = JSON.parse(localStorage.getItem('friendCircleStaticConfig') || '{}');
+            const dynamicConfig = JSON.parse(localStorage.getItem('friendCircleDynamicConfig') || '{}');
+
+            if (currentBookName && staticConfig[currentBookName]) {
+              const config = staticConfig[currentBookName];
               if (config.enabledUids?.length > 0) {
-                const worldInfo = await moduleWI.loadWorldInfo(config.fileId);
-                config.enabledUids.forEach(uid => {
-                  const entry = worldInfo.entries?.[uid];
-                  if (entry?.content) worldbookContent.push(`【${bookName} - ${entry.title || entry.comment || '未命名'}】\n${entry.content}`);
-                });
+                try {
+                  const worldInfo = await moduleWI.loadWorldInfo(config.fileId);
+                  const entries = worldInfo.entries || worldInfo || {};
+
+                  // 使用同样的排序逻辑生成
+                  const sortedUids = config.enabledUids
+                    .map(uid => ({ id: uid, entry: entries[uid], sortInfo: getSortInfo(entries[uid], uid) }))
+                    .sort(compareEntries)
+                    .map(item => item.id);
+
+                  sortedUids.forEach(uid => {
+                    const entry = entries[uid];
+                    if (entry?.content) {
+                      const entryName = entry.comment || entry.title || entry.name || '未命名';
+                      worldbookContent.push(`【${currentBookName} - ${entryName}】\n${entry.content}`);
+                    }
+                  });
+                } catch (e) { console.warn(`[世界书] 加载静态配置失败: ${currentBookName}`, e); }
               }
             }
-            for (const [bookName, config] of Object.entries(JSON.parse(localStorage.getItem('friendCircleDynamicConfig') || '{}'))) {
+
+            if (currentBookName && dynamicConfig[currentBookName]) {
+              const config = dynamicConfig[currentBookName];
               if (config.enabledUids?.length > 0) {
-                const worldInfo = await moduleWI.loadWorldInfo(config.fileId);
-                config.enabledUids.forEach(uid => {
-                  const entry = worldInfo.entries?.[uid];
-                  if (entry?.content) worldbookContent.push(`【${bookName} - ${entry.title || entry.comment || '未命名'}】\n${entry.content}`);
-                });
+                try {
+                  const worldInfo = await moduleWI.loadWorldInfo(config.fileId);
+                  const entries = worldInfo.entries || worldInfo || {};
+
+                  // 使用同样的排序逻辑生成
+                  const sortedUids = config.enabledUids
+                    .map(uid => ({ id: uid, entry: entries[uid], sortInfo: getSortInfo(entries[uid], uid) }))
+                    .sort(compareEntries)
+                    .map(item => item.id);
+
+                  sortedUids.forEach(uid => {
+                    const entry = entries[uid];
+                    if (entry?.content) {
+                      const entryName = entry.comment || entry.title || entry.name || '未命名';
+                      worldbookContent.push(`【${currentBookName} - ${entryName}】\n${entry.content}`);
+                    }
+                  });
+                } catch (e) { console.warn(`[世界书] 加载动态配置失败: ${currentBookName}`, e); }
               }
             }
-          } catch { }
+          } catch (e) { console.warn('[世界书] 模块加载失败:', e); }
 
           const messages = [{ role: "system", content: sysConfig.systemMain }];
           if (worldbookContent.length > 0) messages.push({ role: "user", content: `<WorldBook_Reference>\n${worldbookContent.join('\n\n')}\n</WorldBook_Reference>` });
@@ -1738,14 +1574,11 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             const output = data.choices?.map(c => c.message?.content || '').join('\n') || '[未生成内容]';
-
             lastGeneratedOutput = output;
-
             const outputEl = document.getElementById('sp-gen-output');
             const labelEl = document.getElementById('sp-output-label');
             if (outputEl) outputEl.textContent = output;
             if (labelEl) labelEl.textContent = '📤 生成输出:';
-
             return output;
           } catch (e) {
             const outputEl = document.getElementById('sp-gen-output');
@@ -1775,7 +1608,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           const autoBtn = document.getElementById('sp-gen-auto');
           if (autoMode) {
             if (autoBtn) { autoBtn.textContent = '自动化(运行中)'; autoBtn.style.background = '#A3C956'; }
-            if (autoEventHandler) { try { const { eventSource, event_types } = SillyTavern.getContext(); eventSource.removeListener(event_types.GENERATION_ENDED, autoEventHandler); } catch { } }
+            if (autoEventHandler) { try { const { eventSource, event_types } = SillyTavern.getContext(); eventSource.removeListener(event_types.GENERATION_ENDED, autoEventHandler); } catch {} }
             const { eventSource, event_types } = SillyTavern.getContext();
             autoEventHandler = async () => {
               const ctx = SillyTavern.getContext();
@@ -1786,12 +1619,12 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               if (processedMessageIds.has(msgId)) return;
               processedMessageIds.add(msgId);
               if (processedMessageIds.size > 100) processedMessageIds = new Set(Array.from(processedMessageIds).slice(-100));
-              try { const cutted = await getLastMessages(); await generateFriendCircle(cutted); } catch { }
+              try { const cutted = await getLastMessages(); await generateFriendCircle(cutted); } catch {}
             };
             eventSource.on(event_types.GENERATION_ENDED, autoEventHandler);
           } else {
             if (autoBtn) { autoBtn.textContent = '自动化'; autoBtn.style.background = '#D87E5E'; }
-            if (autoEventHandler) { try { const { eventSource, event_types } = SillyTavern.getContext(); eventSource.removeListener(event_types.GENERATION_ENDED, autoEventHandler); autoEventHandler = null; } catch { } }
+            if (autoEventHandler) { try { const { eventSource, event_types } = SillyTavern.getContext(); eventSource.removeListener(event_types.GENERATION_ENDED, autoEventHandler); autoEventHandler = null; } catch {} }
           }
         }
 
@@ -1803,7 +1636,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           const tuoguanBtn = document.getElementById('sp-gen-tuoguan');
           if (tuoguanMode) {
             if (tuoguanBtn) { tuoguanBtn.textContent = '托管(运行中)'; tuoguanBtn.style.background = '#A3C956'; }
-            if (tuoguanEventHandler) { try { const { eventSource, event_types } = SillyTavern.getContext(); eventSource.removeListener(event_types.GENERATION_ENDED, tuoguanEventHandler); } catch { } }
+            if (tuoguanEventHandler) { try { const { eventSource, event_types } = SillyTavern.getContext(); eventSource.removeListener(event_types.GENERATION_ENDED, tuoguanEventHandler); } catch {} }
             const { eventSource, event_types } = SillyTavern.getContext();
             tuoguanEventHandler = async () => {
               const ctx = SillyTavern.getContext();
@@ -1828,7 +1661,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             eventSource.on(event_types.GENERATION_ENDED, tuoguanEventHandler);
           } else {
             if (tuoguanBtn) { tuoguanBtn.textContent = '托管'; tuoguanBtn.style.background = '#D87E5E'; }
-            if (tuoguanEventHandler) { try { const { eventSource, event_types } = SillyTavern.getContext(); eventSource.removeListener(event_types.GENERATION_ENDED, tuoguanEventHandler); tuoguanEventHandler = null; } catch { } }
+            if (tuoguanEventHandler) { try { const { eventSource, event_types } = SillyTavern.getContext(); eventSource.removeListener(event_types.GENERATION_ENDED, tuoguanEventHandler); tuoguanEventHandler = null; } catch {} }
           }
         }
 
@@ -1839,21 +1672,17 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
 
         contentClickHandler = async (e) => {
           const target = e.target;
-
           if (target.id === 'sp-gen-now') {
             showingLog = false;
-            try { await getLastMessages(); const cutted = await getLastMessages(); generateFriendCircle(cutted); } catch (err) { debugLog('生成异常', err.message); }
-          }
-
-          else if (target.id === 'sp-gen-log') {
+            try { const cutted = await getLastMessages(); generateFriendCircle(cutted); } catch (err) { debugLog('生成异常', err.message); }
+          } else if (target.id === 'sp-gen-log') {
             const outputEl = document.getElementById('sp-gen-output');
             const labelEl = document.getElementById('sp-output-label');
             const logBtn = document.getElementById('sp-gen-log');
-
             if (!showingLog) {
               showingLog = true;
               if (outputEl) outputEl.textContent = formatMessagesLog(lastSentMessages);
-              if (labelEl) labelEl.textContent = '📋 发送日志 (点击"日志"返回):';
+              if (labelEl) labelEl.textContent = '📋 发送日志:';
               if (logBtn) { logBtn.textContent = '📤输出'; logBtn.style.background = '#588254'; }
             } else {
               showingLog = false;
@@ -1861,16 +1690,12 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
               if (labelEl) labelEl.textContent = '📤 生成输出:';
               if (logBtn) { logBtn.textContent = '📋日志'; logBtn.style.background = '#6B5B95'; }
             }
-          }
-
-          else if (target.id === 'sp-gen-inject-input') {
+          } else if (target.id === 'sp-gen-inject-input') {
             const texts = lastGeneratedOutput || document.getElementById('sp-gen-output')?.textContent.trim();
             if (!texts || showingLog) return alert('请先生成内容');
             const inputEl = document.getElementById('send_textarea');
             if (inputEl) { inputEl.value = texts; inputEl.dispatchEvent(new Event('input', { bubbles: true })); }
-          }
-
-          else if (target.id === 'sp-gen-inject-chat') {
+          } else if (target.id === 'sp-gen-inject-chat') {
             const texts = lastGeneratedOutput || document.getElementById('sp-gen-output')?.textContent.trim();
             if (!texts || showingLog) return alert('请先生成内容');
             const ctx = SillyTavern.getContext();
@@ -1881,22 +1706,16 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             const aiMes = [...allMes].reverse().find(m => !m.classList.contains('user'));
             if (!aiMes) return alert('未找到DOM中的AI消息');
             simulateEditMessage(aiMes, lastAiMes.mes + '\n' + texts);
-          }
-
-          else if (target.id === 'sp-gen-inject-swipe') {
+          } else if (target.id === 'sp-gen-inject-swipe') {
             const texts = lastGeneratedOutput || document.getElementById('sp-gen-output')?.textContent.trim();
             if (!texts || showingLog) return alert('请先生成内容');
             const inputEl = document.getElementById('send_textarea');
             if (inputEl) { inputEl.value = `/addswipe ${texts}`; inputEl.dispatchEvent(new Event('input', { bubbles: true })); }
             const sendBtn = document.getElementById('send_but');
             if (sendBtn) sendBtn.click();
-          }
-
-          else if (target.id === 'sp-gen-auto') {
+          } else if (target.id === 'sp-gen-auto') {
             toggleAutoMode();
-          }
-
-          else if (target.id === 'sp-gen-tuoguan') {
+          } else if (target.id === 'sp-gen-tuoguan') {
             toggleTuoguanMode();
           }
         };
