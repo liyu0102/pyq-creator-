@@ -371,6 +371,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             </div>
 
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
+              <!-- 修改3: 保存当前 字体加粗 -->
               <button id="sp-api-save-btn" style="flex: 1; min-width: 80px; padding: 8px; background: #588254; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">保存当前</button>
               <button id="sp-api-save-as-new" style="flex: 1; min-width: 80px; padding: 8px; background: #A3C956; color: #4D4135; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">存为新配置</button>
             </div>
@@ -1320,22 +1321,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           const container = document.getElementById('sp-entries-list');
           container.innerHTML = '';
 
-          // 修复：增加排序逻辑，优先按 order，其次按 uid 排序
-          const entryKeys = Object.keys(entries).sort((a, b) => {
-             const entryA = entries[a];
-             const entryB = entries[b];
-             // 尝试获取 order 或 id，如果是数字则按数字排
-             const orderA = entryA.order !== undefined ? Number(entryA.order) : (entryA.uid !== undefined ? Number(entryA.uid) : Infinity);
-             const orderB = entryB.order !== undefined ? Number(entryB.order) : (entryB.uid !== undefined ? Number(entryB.uid) : Infinity);
-
-             // 如果都能转成数字，且不都是 Infinity
-             if (!isNaN(orderA) && !isNaN(orderB) && (orderA !== Infinity || orderB !== Infinity)) {
-                 return orderA - orderB;
-             }
-             // 否则按字符串key排序
-             return a.localeCompare(b, undefined, { numeric: true });
-          });
-
+          const entryKeys = Object.keys(entries);
           let visibleCount = 0;
           let totalCount = entryKeys.length;
           let disabledCount = 0;
@@ -1712,29 +1698,10 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           const replacedPrompts = allPrompts.map(p => replaceRandomMacros(p).text);
 
           let worldbookContent = [];
-
-          // === 新增：获取当前激活的世界书列表 ===
-          const ctx = SillyTavern.getContext();
-          const activeWorldBooks = new Set();
-
-          // 1. 获取全局挂载的世界书
-          if (ctx.worldInfo && Array.isArray(ctx.worldInfo)) {
-              ctx.worldInfo.forEach(w => activeWorldBooks.add(w.name));
-          }
-          // 2. 获取角色绑定的世界书 (如果有)
-          if (ctx.character && ctx.character.data && ctx.character.data.character_book) {
-              // 某些版本的ST可能已经把角色绑定的书包含在 ctx.worldInfo 里了，但为了保险起见：
-              const charBookName = ctx.character.data.character_book.name;
-              if (charBookName) activeWorldBooks.add(charBookName);
-          }
-
           try {
             const moduleWI = await import('/scripts/world-info.js');
-
-            // 静态世界书处理
             for (const [bookName, config] of Object.entries(JSON.parse(localStorage.getItem('friendCircleStaticConfig') || '{}'))) {
-              // 关键修改：只有当书名在激活列表里时，才加入
-              if (config.enabledUids?.length > 0 && activeWorldBooks.has(bookName)) {
+              if (config.enabledUids?.length > 0) {
                 const worldInfo = await moduleWI.loadWorldInfo(config.fileId);
                 config.enabledUids.forEach(uid => {
                   const entry = worldInfo.entries?.[uid];
@@ -1742,10 +1709,8 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
                 });
               }
             }
-
-            // 动态世界书处理 (同理)
             for (const [bookName, config] of Object.entries(JSON.parse(localStorage.getItem('friendCircleDynamicConfig') || '{}'))) {
-              if (config.enabledUids?.length > 0 && activeWorldBooks.has(bookName)) {
+              if (config.enabledUids?.length > 0) {
                 const worldInfo = await moduleWI.loadWorldInfo(config.fileId);
                 config.enabledUids.forEach(uid => {
                   const entry = worldInfo.entries?.[uid];
