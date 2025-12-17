@@ -214,25 +214,47 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
       const content = panel.querySelector('#sp-content-area');
 
       // ========== 排序辅助函数 ==========
-      // ST位置: 0=Before, 1=After, 2=Top, 3=Bottom, 4=Depth
       const POS_LABELS = { 0: '前', 1: '后', 2: '顶', 3: '底', 4: '深' };
-      // 模拟ST的默认插入顺序：顶 -> 前 -> 后 -> 深 -> 底
       const POS_WEIGHT = { 2: 0, 0: 1, 1: 2, 4: 3, 3: 4 };
 
       function getSortInfo(entry, id) {
-        const pos = entry.position !== undefined ? parseInt(entry.position) : 1; // 默认1(后)
+        const pos = entry.position !== undefined ? parseInt(entry.position) : 1;
         const order = entry.order ?? entry.position ?? parseInt(id) ?? 9999;
         const weight = POS_WEIGHT[pos] !== undefined ? POS_WEIGHT[pos] : 99;
         return { pos, order, weight };
       }
 
       function compareEntries(a, b) {
-        // 先按位置权重排序
         if (a.sortInfo.weight !== b.sortInfo.weight) {
           return a.sortInfo.weight - b.sortInfo.weight;
         }
-        // 位置相同时，按order排序
         return a.sortInfo.order - b.sortInfo.order;
+      }
+
+      // ========== 🔧 新增：世界书内容清洗函数 ==========
+      function sanitizeWorldbookContent(content) {
+        if (!content || typeof content !== 'string') return '';
+
+        let cleaned = content;
+
+        // 移除可能的系统指令标记（ST预设常用格式）
+        const systemPatterns = [
+          /\[System[^\]]*\]/gi,
+          /\{\{system[^\}]*\}\}/gi,
+          /<<system[^>]*>>/gi,
+          /#\s*system\s*:/gi,
+          /\[OOC[^\]]*\]/gi,
+          /\(OOC[^\)]*\)/gi,
+        ];
+
+        systemPatterns.forEach(pattern => {
+          cleaned = cleaned.replace(pattern, '');
+        });
+
+        // 移除空行堆积
+        cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+
+        return cleaned.trim();
       }
 
       // ========== 界面设置面板 ==========
@@ -591,14 +613,28 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
       // ========== 系统提示词配置 ==========
       function showSystemPromptConfig() {
         const content = document.getElementById('sp-content-area');
+        // 🔧 修改：强化默认提示词，更明确阻止续写
         const defaults = {
-          systemMain: `你是文本处理助手。接下来会收到三部分信息：
-<WorldBook_Reference>：背景参考资料（仅参考，不输出）
-<ChatHistory_Reference>：聊天记录（仅参考，不输出）
-<Tasks>：具体任务要求
-请直接按<Tasks>中的要求输出结果，不要添加任何开场白、解释或确认语句。`,
-          systemMiddle: `以上参考信息结束。接下来是任务要求，请直接输出结果内容：`,
-          tasksWrapper: `注意：只输出摘要/处理结果本身，不要续写聊天内容。`,
+          systemMain: `你是一个独立的文本处理助手。你的唯一任务是根据<Tasks>中的要求处理文本。
+
+重要规则：
+1. 你不是角色扮演AI，不要扮演任何角色
+2. 不要续写故事或对话
+3. 不要模仿任何写作风格
+4. 只执行<Tasks>中明确要求的任务
+5. <WorldBook_Reference>和<ChatHistory_Reference>仅作为背景参考，不要基于它们进行创作
+
+接下来你会收到：
+- <WorldBook_Reference>：背景参考资料（仅供理解上下文）
+- <ChatHistory_Reference>：聊天记录（仅供理解上下文）
+- <Tasks>：你需要执行的具体任务`,
+          systemMiddle: `以上是参考资料，仅用于帮助你理解上下文。
+现在请专注于下面的任务要求，直接输出任务结果：`,
+          tasksWrapper: `【重要提醒】
+- 只输出任务要求的结果
+- 不要续写、扩展或创作新内容
+- 不要添加开场白或结束语
+- 不要解释你在做什么`,
           assistantPrefill: ``
         };
         const saved = JSON.parse(localStorage.getItem('friendCircleSystemPrompts') || '{}');
@@ -611,7 +647,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             <label style="color: #ddd; display: block; margin-bottom: 4px;">
               <span style="color: #A3C956;">❖</span> 主系统提示词
             </label>
-            <textarea id="sp-sys-main" rows="4" style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; resize: vertical; box-sizing: border-box; min-height: 80px; font-family: inherit; line-height: 1.5;">${config.systemMain}</textarea>
+            <textarea id="sp-sys-main" rows="6" style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; resize: vertical; box-sizing: border-box; min-height: 120px; font-family: inherit; line-height: 1.5;">${config.systemMain}</textarea>
           </div>
           <div style="margin-bottom: 12px;">
             <label style="color: #ddd; display: block; margin-bottom: 4px;">
@@ -623,7 +659,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             <label style="color: #ddd; display: block; margin-bottom: 4px;">
               <span style="color: #A3C956;">❖</span> 任务包装后缀
             </label>
-            <textarea id="sp-sys-tasks" rows="2" style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; resize: vertical; box-sizing: border-box; font-family: inherit; line-height: 1.5;">${config.tasksWrapper}</textarea>
+            <textarea id="sp-sys-tasks" rows="3" style="width: 100%; padding: 8px; border-radius: 4px; background: #5B6262; color: #fff; border: 1px solid #588254; resize: vertical; box-sizing: border-box; font-family: inherit; line-height: 1.5;">${config.tasksWrapper}</textarea>
           </div>
           <div style="margin-bottom: 12px;">
             <label style="color: #ddd; display: block; margin-bottom: 4px;">
@@ -1080,11 +1116,23 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         const STATIC_CONFIG_KEY = 'friendCircleStaticConfig';
         const DYNAMIC_CONFIG_KEY = 'friendCircleDynamicConfig';
         const LAST_WORLDBOOK_KEY = 'friendCircleLastWorldbook';
+        const WORLDBOOK_ENABLED_KEY = 'friendCircleWorldbookEnabled'; // 🔧 新增：世界书开关
         const lastState = JSON.parse(localStorage.getItem(LAST_WORLDBOOK_KEY) || '{}');
+        const worldbookEnabled = localStorage.getItem(WORLDBOOK_ENABLED_KEY) !== '0'; // 默认启用
 
         content.innerHTML = `
         <div style="padding: 12px; background: #4D4135; border-radius: 8px;">
           <h3 style="color: #A3C956; margin-bottom: 12px;">📚 世界书配置</h3>
+
+          <!-- 🔧 新增：世界书总开关 -->
+          <div style="margin-bottom: 12px; padding: 10px; background: #3a3a4e; border-radius: 6px; border: 1px solid ${worldbookEnabled ? '#588254' : '#D87E5E'};">
+            <label style="display: flex; align-items: center; gap: 8px; color: #ddd; cursor: pointer;">
+              <input type="checkbox" id="sp-worldbook-toggle" ${worldbookEnabled ? 'checked' : ''} style="width: 18px; height: 18px;">
+              <span style="font-weight: bold;">📚 启用世界书</span>
+              <span style="font-size: 11px; color: #888;">（关闭可排查问题）</span>
+            </label>
+          </div>
+
           <div style="display: flex; gap: 8px; margin-bottom: 12px;">
             <div style="flex: 1;">
               <label style="color: #ddd; display: block; margin-bottom: 4px;">📁 已配置的世界书:</label>
@@ -1113,6 +1161,15 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           <div id="sp-worldbook-status" style="margin-top: 8px; font-size: 12px; color: #A3C956;"></div>
         </div>
         `;
+
+        // 🔧 新增：世界书开关事件
+        document.getElementById('sp-worldbook-toggle').addEventListener('change', (e) => {
+          const enabled = e.target.checked;
+          localStorage.setItem(WORLDBOOK_ENABLED_KEY, enabled ? '1' : '0');
+          const container = e.target.closest('div');
+          container.style.borderColor = enabled ? '#588254' : '#D87E5E';
+          document.getElementById('sp-worldbook-status').textContent = enabled ? '✅ 世界书已启用' : '⚠️ 世界书已禁用（生成时不会包含世界书内容）';
+        });
 
         let currentWorldbookName = lastState.worldbookName || '';
         let currentFileId = lastState.fileId || '';
@@ -1247,7 +1304,6 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             const titleRow = document.createElement('div');
             titleRow.style.cssText = 'display: flex; align-items: center; gap: 6px; flex-wrap: wrap;';
 
-            // 显示 [位置:顺序] 标签
             const orderBadge = document.createElement('span');
             const posLabel = POS_LABELS[sortInfo.pos] || '?';
             orderBadge.textContent = `[${posLabel}:${sortInfo.order}]`;
@@ -1426,6 +1482,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
       let autoMode = false, tuoguanMode = false, autoEventHandler = null, tuoguanEventHandler = null;
       let processedMessageIds = new Set(), contentClickHandler = null;
       let lastSentMessages = null, lastGeneratedOutput = '';
+      let lastWorldbookContent = []; // 🔧 新增：保存世界书内容用于日志
       const AUTO_MODE_KEY = 'friendCircleAutoMode', TUOGUAN_MODE_KEY = 'friendCircleTuoguanMode';
 
       function getMessageId(msg) { return `${msg.send_date || ''}_${msg.mes ? msg.mes.substring(0, 50) : ''}_${msg.is_user}`; }
@@ -1452,6 +1509,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             <button id="sp-gen-inject-chat" style="padding: 8px 16px; background: #5B6262; color: white; border: none; border-radius: 4px; cursor: pointer;">注入聊天</button>
             <button id="sp-gen-inject-swipe" style="padding: 8px 16px; background: #5B6262; color: white; border: none; border-radius: 4px; cursor: pointer;">注入swipe</button>
             <button id="sp-gen-log" style="padding: 8px 16px; background: #6B5B95; color: white; border: none; border-radius: 4px; cursor: pointer;">📋日志</button>
+            <button id="sp-gen-worldbook-log" style="padding: 8px 16px; background: #4a6fa5; color: white; border: none; border-radius: 4px; cursor: pointer;">📚世界书</button>
             <button id="sp-gen-auto" style="padding: 8px 16px; background: ${autoMode ? '#A3C956' : '#D87E5E'}; color: white; border: none; border-radius: 4px; cursor: pointer;">${autoMode ? '自动化(运行中)' : '自动化'}</button>
             <button id="sp-gen-tuoguan" style="padding: 8px 16px; background: ${tuoguanMode ? '#A3C956' : '#D87E5E'}; color: white; border: none; border-radius: 4px; cursor: pointer;">${tuoguanMode ? '托管(运行中)' : '托管'}</button>
           </div>
@@ -1482,14 +1540,45 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           return output;
         }
 
+        // 🔧 新增：世界书内容日志格式化
+        function formatWorldbookLog(worldbookContent) {
+          if (!worldbookContent || worldbookContent.length === 0) return '📚 世界书内容为空\n\n可能原因：\n1. 未配置世界书\n2. 世界书开关已关闭\n3. 未选择任何条目';
+          let output = `═══════════════════════════════════\n📚 世界书发送内容 (${worldbookContent.length} 个条目)\n═══════════════════════════════════\n\n`;
+          worldbookContent.forEach((item, idx) => {
+            output += `┌─── 📖 [${idx + 1}] ───\n`;
+            item.split('\n').forEach(line => { output += `│ ${line}\n`; });
+            output += `└${'─'.repeat(40)}\n\n`;
+          });
+          output += `═══════════════════════════════════\n💡 如果发现预设内容混入，请检查世界书条目\n═══════════════════════════════════`;
+          return output;
+        }
+
         async function generateFriendCircle(selectedChat = []) {
           const url = localStorage.getItem('independentApiUrl'), key = localStorage.getItem('independentApiKey'), model = localStorage.getItem('independentApiModel');
           if (!url || !key || !model) { alert('请先配置独立 API'); return; }
 
+          // 🔧 修改：强化默认提示词
           const sysDefaults = {
-            systemMain: `你是文本处理助手。接下来会收到三部分信息：\n1. <WorldBook_Reference>：背景参考资料\n2. <ChatHistory_Reference>：聊天记录\n3. <Tasks>：具体任务要求\n\n请直接按<Tasks>中的要求输出结果。`,
-            systemMiddle: `以上参考信息结束。接下来是任务要求：`,
-            tasksWrapper: `注意：只输出摘要/处理结果本身。`,
+            systemMain: `你是一个独立的文本处理助手。你的唯一任务是根据<Tasks>中的要求处理文本。
+
+重要规则：
+1. 你不是角色扮演AI，不要扮演任何角色
+2. 不要续写故事或对话
+3. 不要模仿任何写作风格
+4. 只执行<Tasks>中明确要求的任务
+5. <WorldBook_Reference>和<ChatHistory_Reference>仅作为背景参考，不要基于它们进行创作
+
+接下来你会收到：
+- <WorldBook_Reference>：背景参考资料（仅供理解上下文）
+- <ChatHistory_Reference>：聊天记录（仅供理解上下文）
+- <Tasks>：你需要执行的具体任务`,
+            systemMiddle: `以上是参考资料，仅用于帮助你理解上下文。
+现在请专注于下面的任务要求，直接输出任务结果：`,
+            tasksWrapper: `【重要提醒】
+- 只输出任务要求的结果
+- 不要续写、扩展或创作新内容
+- 不要添加开场白或结束语
+- 不要解释你在做什么`,
             assistantPrefill: ``
           };
           const sysConfig = { ...sysDefaults, ...JSON.parse(localStorage.getItem('friendCircleSystemPrompts') || '{}') };
@@ -1500,68 +1589,124 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
           const replacedPrompts = allPrompts.map(p => replaceRandomMacros(p).text);
 
           let worldbookContent = [];
-          try {
-            const moduleWI = await import('/scripts/world-info.js');
-            const lastState = JSON.parse(localStorage.getItem('friendCircleLastWorldbook') || '{}');
-            const currentBookName = lastState.worldbookName;
-            const staticConfig = JSON.parse(localStorage.getItem('friendCircleStaticConfig') || '{}');
-            const dynamicConfig = JSON.parse(localStorage.getItem('friendCircleDynamicConfig') || '{}');
+          lastWorldbookContent = []; // 重置
 
-            if (currentBookName && staticConfig[currentBookName]) {
-              const config = staticConfig[currentBookName];
-              if (config.enabledUids?.length > 0) {
-                try {
-                  const worldInfo = await moduleWI.loadWorldInfo(config.fileId);
-                  const entries = worldInfo.entries || worldInfo || {};
+          // 🔧 修改：检查世界书开关
+          const worldbookEnabled = localStorage.getItem('friendCircleWorldbookEnabled') !== '0';
 
-                  // 使用同样的排序逻辑生成
-                  const sortedUids = config.enabledUids
-                    .map(uid => ({ id: uid, entry: entries[uid], sortInfo: getSortInfo(entries[uid], uid) }))
-                    .sort(compareEntries)
-                    .map(item => item.id);
+          if (worldbookEnabled) {
+            try {
+              const moduleWI = await import('/scripts/world-info.js');
+              const lastState = JSON.parse(localStorage.getItem('friendCircleLastWorldbook') || '{}');
+              const currentBookName = lastState.worldbookName;
+              const staticConfig = JSON.parse(localStorage.getItem('friendCircleStaticConfig') || '{}');
+              const dynamicConfig = JSON.parse(localStorage.getItem('friendCircleDynamicConfig') || '{}');
 
-                  sortedUids.forEach(uid => {
-                    const entry = entries[uid];
-                    if (entry?.content) {
-                      const entryName = entry.comment || entry.title || entry.name || '未命名';
-                      worldbookContent.push(`【${currentBookName} - ${entryName}】\n${entry.content}`);
-                    }
-                  });
-                } catch (e) { console.warn(`[世界书] 加载静态配置失败: ${currentBookName}`, e); }
+              if (currentBookName && staticConfig[currentBookName]) {
+                const config = staticConfig[currentBookName];
+                if (config.enabledUids?.length > 0) {
+                  try {
+                    const worldInfo = await moduleWI.loadWorldInfo(config.fileId);
+                    const entries = worldInfo.entries || worldInfo || {};
+
+                    const sortedUids = config.enabledUids
+                      .map(uid => ({ id: uid, entry: entries[uid], sortInfo: getSortInfo(entries[uid], uid) }))
+                      .filter(item => item.entry) // 🔧 过滤无效条目
+                      .sort(compareEntries)
+                      .map(item => item.id);
+
+                    sortedUids.forEach(uid => {
+                      const entry = entries[uid];
+                      if (entry?.content) {
+                        const entryName = entry.comment || entry.title || entry.name || '未命名';
+                        // 🔧 使用清洗函数
+                        const cleanedContent = sanitizeWorldbookContent(entry.content);
+                        if (cleanedContent) {
+                          worldbookContent.push(`【${currentBookName} - ${entryName}】\n${cleanedContent}`);
+                        }
+                      }
+                    });
+                  } catch (e) { console.warn(`[世界书] 加载静态配置失败: ${currentBookName}`, e); }
+                }
               }
-            }
 
-            if (currentBookName && dynamicConfig[currentBookName]) {
-              const config = dynamicConfig[currentBookName];
-              if (config.enabledUids?.length > 0) {
-                try {
-                  const worldInfo = await moduleWI.loadWorldInfo(config.fileId);
-                  const entries = worldInfo.entries || worldInfo || {};
+              if (currentBookName && dynamicConfig[currentBookName]) {
+                const config = dynamicConfig[currentBookName];
+                if (config.enabledUids?.length > 0) {
+                  try {
+                    const worldInfo = await moduleWI.loadWorldInfo(config.fileId);
+                    const entries = worldInfo.entries || worldInfo || {};
 
-                  // 使用同样的排序逻辑生成
-                  const sortedUids = config.enabledUids
-                    .map(uid => ({ id: uid, entry: entries[uid], sortInfo: getSortInfo(entries[uid], uid) }))
-                    .sort(compareEntries)
-                    .map(item => item.id);
+                    const sortedUids = config.enabledUids
+                      .map(uid => ({ id: uid, entry: entries[uid], sortInfo: getSortInfo(entries[uid], uid) }))
+                      .filter(item => item.entry) // 🔧 过滤无效条目
+                      .sort(compareEntries)
+                      .map(item => item.id);
 
-                  sortedUids.forEach(uid => {
-                    const entry = entries[uid];
-                    if (entry?.content) {
-                      const entryName = entry.comment || entry.title || entry.name || '未命名';
-                      worldbookContent.push(`【${currentBookName} - ${entryName}】\n${entry.content}`);
-                    }
-                  });
-                } catch (e) { console.warn(`[世界书] 加载动态配置失败: ${currentBookName}`, e); }
+                    sortedUids.forEach(uid => {
+                      const entry = entries[uid];
+                      if (entry?.content) {
+                        const entryName = entry.comment || entry.title || entry.name || '未命名';
+                        // 🔧 使用清洗函数
+                        const cleanedContent = sanitizeWorldbookContent(entry.content);
+                        if (cleanedContent) {
+                          worldbookContent.push(`【${currentBookName} - ${entryName}】\n${cleanedContent}`);
+                        }
+                      }
+                    });
+                  } catch (e) { console.warn(`[世界书] 加载动态配置失败: ${currentBookName}`, e); }
+                }
               }
-            }
-          } catch (e) { console.warn('[世界书] 模块加载失败:', e); }
+            } catch (e) { console.warn('[世界书] 模块加载失败:', e); }
+          }
 
+          lastWorldbookContent = [...worldbookContent]; // 保存用于日志
+
+          // 🔧 修改：构建消息时添加更强的隔离
           const messages = [{ role: "system", content: sysConfig.systemMain }];
-          if (worldbookContent.length > 0) messages.push({ role: "user", content: `<WorldBook_Reference>\n${worldbookContent.join('\n\n')}\n</WorldBook_Reference>` });
-          if (selectedChat.length > 0) messages.push({ role: "user", content: `<ChatHistory_Reference>\n${selectedChat.join('\n')}\n</ChatHistory_Reference>` });
+
+          if (worldbookContent.length > 0) {
+            messages.push({
+              role: "user",
+              content: `<WorldBook_Reference>
+以下是背景参考资料，仅供理解上下文使用，不要基于这些内容进行创作或续写：
+
+${worldbookContent.join('\n\n---\n\n')}
+
+</WorldBook_Reference>`
+            });
+          }
+
+          if (selectedChat.length > 0) {
+            messages.push({
+              role: "user",
+              content: `<ChatHistory_Reference>
+以下是聊天记录，仅供理解上下文使用，不要续写这些对话：
+
+${selectedChat.join('\n')}
+
+</ChatHistory_Reference>`
+            });
+          }
+
           messages.push({ role: "system", content: sysConfig.systemMiddle });
-          if (replacedPrompts.length > 0) messages.push({ role: "system", content: `<Tasks>\n${replacedPrompts.join('\n')}\n\n${sysConfig.tasksWrapper}\n</Tasks>` });
-          if (sysConfig.assistantPrefill?.trim()) messages.push({ role: "assistant", content: sysConfig.assistantPrefill });
+
+          if (replacedPrompts.length > 0) {
+            messages.push({
+              role: "user", // 🔧 改为user角色，有些模型对user的任务指令更敏感
+              content: `<Tasks>
+请执行以下任务（这是你唯一需要做的事情）：
+
+${replacedPrompts.join('\n\n')}
+
+${sysConfig.tasksWrapper}
+</Tasks>`
+            });
+          }
+
+          if (sysConfig.assistantPrefill?.trim()) {
+            messages.push({ role: "assistant", content: sysConfig.assistantPrefill });
+          }
 
           lastSentMessages = messages;
 
@@ -1668,36 +1813,78 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
         if (localStorage.getItem(AUTO_MODE_KEY) === '1') toggleAutoMode(true);
         if (localStorage.getItem(TUOGUAN_MODE_KEY) === '1') toggleTuoguanMode(true);
 
-        let showingLog = false;
+        let currentLogView = 'output'; // 'output', 'messages', 'worldbook'
 
         contentClickHandler = async (e) => {
           const target = e.target;
           if (target.id === 'sp-gen-now') {
-            showingLog = false;
-            try { const cutted = await getLastMessages(); generateFriendCircle(cutted); } catch (err) { debugLog('生成异常', err.message); }
+            currentLogView = 'output';
+            const outputEl = document.getElementById('sp-gen-output');
+            const labelEl = document.getElementById('sp-output-label');
+            const genBtn = document.getElementById('sp-gen-now');
+            const logBtn = document.getElementById('sp-gen-log');
+            const wbLogBtn = document.getElementById('sp-gen-worldbook-log');
+            if (outputEl) outputEl.textContent = '⏳ 正在生成中，请稍候...';
+            if (labelEl) labelEl.textContent = '📤 生成输出: (生成中...)';
+            if (genBtn) { genBtn.disabled = true; genBtn.style.opacity = '0.6'; genBtn.textContent = '生成中...'; }
+            if (logBtn) { logBtn.textContent = '📋日志'; logBtn.style.background = '#6B5B95'; }
+            if (wbLogBtn) { wbLogBtn.textContent = '📚世界书'; wbLogBtn.style.background = '#4a6fa5'; }
+            try {
+              const cutted = await getLastMessages();
+              await generateFriendCircle(cutted);
+              if (labelEl) labelEl.textContent = '📤 生成输出: ✅ 已完成';
+            } catch (err) {
+              debugLog('生成异常', err.message);
+              if (outputEl) outputEl.textContent = '❌ 生成失败: ' + err.message;
+              if (labelEl) labelEl.textContent = '📤 生成输出: ❌ 失败';
+            } finally {
+              if (genBtn) { genBtn.disabled = false; genBtn.style.opacity = '1'; genBtn.textContent = '立刻生成'; }
+            }
           } else if (target.id === 'sp-gen-log') {
             const outputEl = document.getElementById('sp-gen-output');
             const labelEl = document.getElementById('sp-output-label');
             const logBtn = document.getElementById('sp-gen-log');
-            if (!showingLog) {
-              showingLog = true;
+            const wbLogBtn = document.getElementById('sp-gen-worldbook-log');
+
+            if (currentLogView !== 'messages') {
+              currentLogView = 'messages';
               if (outputEl) outputEl.textContent = formatMessagesLog(lastSentMessages);
               if (labelEl) labelEl.textContent = '📋 发送日志:';
               if (logBtn) { logBtn.textContent = '📤输出'; logBtn.style.background = '#588254'; }
+              if (wbLogBtn) { wbLogBtn.textContent = '📚世界书'; wbLogBtn.style.background = '#4a6fa5'; }
             } else {
-              showingLog = false;
+              currentLogView = 'output';
               if (outputEl) outputEl.textContent = lastGeneratedOutput || '暂无生成内容';
               if (labelEl) labelEl.textContent = '📤 生成输出:';
               if (logBtn) { logBtn.textContent = '📋日志'; logBtn.style.background = '#6B5B95'; }
             }
+          } else if (target.id === 'sp-gen-worldbook-log') {
+            // 🔧 新增：世界书日志按钮
+            const outputEl = document.getElementById('sp-gen-output');
+            const labelEl = document.getElementById('sp-output-label');
+            const logBtn = document.getElementById('sp-gen-log');
+            const wbLogBtn = document.getElementById('sp-gen-worldbook-log');
+
+            if (currentLogView !== 'worldbook') {
+              currentLogView = 'worldbook';
+              if (outputEl) outputEl.textContent = formatWorldbookLog(lastWorldbookContent);
+              if (labelEl) labelEl.textContent = '📚 世界书内容:';
+              if (wbLogBtn) { wbLogBtn.textContent = '📤输出'; wbLogBtn.style.background = '#588254'; }
+              if (logBtn) { logBtn.textContent = '📋日志'; logBtn.style.background = '#6B5B95'; }
+            } else {
+              currentLogView = 'output';
+              if (outputEl) outputEl.textContent = lastGeneratedOutput || '暂无生成内容';
+              if (labelEl) labelEl.textContent = '📤 生成输出:';
+              if (wbLogBtn) { wbLogBtn.textContent = '📚世界书'; wbLogBtn.style.background = '#4a6fa5'; }
+            }
           } else if (target.id === 'sp-gen-inject-input') {
             const texts = lastGeneratedOutput || document.getElementById('sp-gen-output')?.textContent.trim();
-            if (!texts || showingLog) return alert('请先生成内容');
+            if (!texts || currentLogView !== 'output') return alert('请先生成内容');
             const inputEl = document.getElementById('send_textarea');
             if (inputEl) { inputEl.value = texts; inputEl.dispatchEvent(new Event('input', { bubbles: true })); }
           } else if (target.id === 'sp-gen-inject-chat') {
             const texts = lastGeneratedOutput || document.getElementById('sp-gen-output')?.textContent.trim();
-            if (!texts || showingLog) return alert('请先生成内容');
+            if (!texts || currentLogView !== 'output') return alert('请先生成内容');
             const ctx = SillyTavern.getContext();
             if (!ctx?.chat?.length) return alert('未找到消息');
             const lastAiMes = [...ctx.chat].reverse().find(m => m.is_user === false);
@@ -1708,7 +1895,7 @@ import { saveSettingsDebounced, saveChat } from "../../../../script.js";
             simulateEditMessage(aiMes, lastAiMes.mes + '\n' + texts);
           } else if (target.id === 'sp-gen-inject-swipe') {
             const texts = lastGeneratedOutput || document.getElementById('sp-gen-output')?.textContent.trim();
-            if (!texts || showingLog) return alert('请先生成内容');
+            if (!texts || currentLogView !== 'output') return alert('请先生成内容');
             const inputEl = document.getElementById('send_textarea');
             if (inputEl) { inputEl.value = `/addswipe ${texts}`; inputEl.dispatchEvent(new Event('input', { bubbles: true })); }
             const sendBtn = document.getElementById('send_but');
